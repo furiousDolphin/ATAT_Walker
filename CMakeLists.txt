@@ -51,7 +51,7 @@ target_include_directories(base_module_library INTERFACE
     ${PROJECT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${Python_INCLUDE_DIRS}
-    "${CMAKE_CURRENT_SOURCE_DIR}/external/boost_headers"
+    "E:/boost_math_cpp/boost_1_88_0"
     "${SDL2_PATH}/include"
     "${SDL2_PATH}/include/SDL2"
     ${SDL2_INCLUDE_DIRS}
@@ -84,7 +84,8 @@ add_executable(ATAT_WalkerApp
   src/MainMenuMode.cpp
   src/FileManagement.cpp
   src/Animation.cpp
-  src/Slider.cpp )
+  src/Slider.cpp
+  src/AT_AT.cpp )
 target_link_libraries(ATAT_WalkerApp PRIVATE base_module_library)
 
 set_target_properties(ATAT_WalkerApp PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE") #./build/ATAT_WalkerApp.exe

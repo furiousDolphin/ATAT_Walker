@@ -200,9 +200,6 @@ constexpr Vector2D<T> operator*( T scalar, const Vector2D<T>& v )
 }
 
 
-
-
-
 template < typename T >
 constexpr auto distance_between( const Vector2D<T>& v1, const Vector2D<T>& v2 )
 {
@@ -215,7 +212,8 @@ constexpr auto angle_between( const Vector2D<T>& v1, const Vector2D<T>& v2 )
     double denominator = v1.norm()*v2.norm();
 
     if( denominator == 0.0 )
-        throw std::invalid_argument( "dzielenie przez zero" );
+    { throw std::invalid_argument( "dzielenie przez zero" ); }
+    
     double s = (v1^v2) / denominator;
     double c = (v1*v2) / denominator;
 
