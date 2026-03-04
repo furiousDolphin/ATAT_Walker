@@ -13,9 +13,7 @@
 #include "EventManager.hpp"
 #include "GraphicsManager.hpp"
 #include "PersistentState.hpp"
-#include "Land.hpp"
-#include "Entity.hpp"
-#include "WaterObject.hpp"
+
 
 
 
@@ -23,7 +21,12 @@
 class GameMode : public Mode
 {
     public:
-        GameMode( SDL_Renderer* renderer, EventManager& event_manager, GraphicsManager& graphics_manager, PersistentState& persistent_state, float& dt );
+        GameMode( 
+            SDL_Renderer* renderer, 
+            EventManager& event_manager, 
+            GraphicsManager& graphics_manager, 
+            PersistentState& persistent_state, 
+            float& dt );
 
         void run() override;
 
@@ -46,10 +49,6 @@ class GameMode : public Mode
         } context_;
 
         Buttons buttons_;
-        Land land_;
-        Entities entities_;
-        WaterObjects water_objects_;
-        std::unique_ptr<Player> player_;
-};
+    };
 
 #endif

@@ -32,52 +32,17 @@ class GraphicsManager
 
         enum VectorizedTextureKey
         {
-            LAND
+
         };
 
         enum SingularTextureKey
         {
-            CLOUD_SMALL,
-            CLOUD_MIDDLE,
-            CLOUD_BIG,
-            CURSOR_MOUSE,
-            CURSOR_HANDLE,
-            PEARL,
-            WATER_BOTTOM
+
         };
 
         enum AnimationKey
         {
-            WATER_TOP,
-            SPIKES,
-            LEFT_SHELL_ATTACK,
-            LEFT_SHELL_IDLE,
-            RIGHT_SHELL_ATTACK,
-            RIGHT_SHELL_IDLE,
-            TOOTH_IDLE,
-            TOOTH_RUN_LEFT,
-            TOOTH_RUN_RIGHT,
-            PALM_LARGE_BG,
-            PALM_LARGE_FG,
-            PALM_LEFT_BG,
-            PALM_LEFT_FG,
-            PALM_RIGHT_BG,
-            PALM_RIGHT_FG,
-            PALM_SMALL_BG,
-            PALM_SMALL_FG,
-            PLAYER_FALL_LEFT,
-            PLAYER_FALL_RIGHT,
-            PLAYER_IDLE_LEFT,
-            PLAYER_IDLE_RIGHT,
-            PLAYER_JUMP_LEFT,
-            PLAYER_JUMP_RIGHT,
-            PLAYER_RUN_LEFT,
-            PLAYER_RUN_RIGHT,
-            DIAMOND,
-            GOLD,
-            SILVER,
-            PARTICLE,
-            PLAYER_IDLE
+
         };
 
         enum TextButtonKey
@@ -88,9 +53,9 @@ class GraphicsManager
 
         enum FontKey
         {
-            MINECRAFT_18 = 18,
-            MINECRAFT_24 = 24,
-            MINECRAFT_36 = 36
+            MINECRAFT_18,
+            MINECRAFT_24,
+            MINECRAFT_36
         };
 
         struct TextButtonTextures
@@ -128,7 +93,7 @@ class GraphicsManager
     private:
         inline static std::unordered_map<std::string, VectorizedTextureKey> vectorized_textures_as_path_key_map
         {    
-            { "data/graphics/terrain/land", LAND }
+
         };
 
         inline static std::unordered_map<std::string, SingularTextureKey> singular_textures_as_path_key_map
@@ -138,7 +103,7 @@ class GraphicsManager
 
         inline static std::unordered_map<std::string, AnimationKey> animations_as_path_key_map
         {
-            { "data/graphics/player/idle", PLAYER_IDLE },
+
         };
 
         std::unordered_map< AnimationKey, Animation > animations_as_map_;

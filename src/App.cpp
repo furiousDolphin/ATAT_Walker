@@ -4,7 +4,6 @@
 
 #include "App.hpp"
 #include "GameMode.hpp"
-#include "EditorMode.hpp"
 #include "MainMenuMode.hpp"
 
 App::App( SDL_Window* window, SDL_Renderer* renderer ) :
@@ -19,7 +18,6 @@ App::App( SDL_Window* window, SDL_Renderer* renderer ) :
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
     modes_map_.emplace(ModeType::GAME, std::make_unique<GameMode>  ( renderer_, event_manager_, graphics_manager_, persistent_state_, delta_time_) );
-    modes_map_.emplace(ModeType::EDITOR, std::make_unique<EditorMode>( renderer_, event_manager_, graphics_manager_, persistent_state_, delta_time_) );
     modes_map_.emplace(ModeType::MAIN_MENU, std::make_unique<MainMenuMode>( renderer_, event_manager_, graphics_manager_, persistent_state_, delta_time_) );
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

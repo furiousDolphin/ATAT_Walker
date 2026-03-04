@@ -33,10 +33,15 @@ FetchContent_MakeAvailable(json)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(external/pybind11)
 
+set(SDL2_IMAGE_PATH ${SDL2_PATH})
+set(SDL2_TTF_PATH ${SDL2_PATH})
+set(SDL2_MIXER_PATH ${SDL2_PATH})
+set(SDL2_IMAGE_ROOT ${SDL2_PATH})
+
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_ttf REQUIRED)
-find_package(SDL2_mixer REQUIRED)
+# find_package(SDL2_image REQUIRED)
+# find_package(SDL2_ttf REQUIRED)
+# find_package(SDL2_mixer REQUIRED)
 
 #---------------------------------------------------------
 
@@ -67,33 +72,21 @@ target_link_libraries(base_module_library INTERFACE
 target_compile_definitions(base_module_library INTERFACE WITHOUT_NUMPY SDL_MAIN_HANDLED)
 
 
-add_executable(GameMakerApp 
+add_executable(ATAT_WalkerApp 
   main.cpp 
   src/SDL_Management.cpp
   src/App.cpp
   src/EventManager.cpp
   src/GraphicsManager.cpp
-  src/EditorMode.cpp
   src/GameMode.cpp
   src/Button.cpp
-  src/EditorDataManager.cpp
-  src/EditorMenu.cpp
-  src/CanvaTile.cpp
-  src/CanvaObject.cpp
-  src/Animation.cpp
   src/PersistentState.cpp
   src/MainMenuMode.cpp
-  src/Entity.cpp
-  src/Land.cpp
-  src/JsonLevelFormat.cpp
-  src/WaterCanvaObject.cpp
   src/FileManagement.cpp
-  src/WaterObject.cpp
-  src/ChebFunc.cpp
-  src/WaveSimulation.cpp )
-target_link_libraries(GameMakerApp PRIVATE base_module_library)
+  src/Animation.cpp )
+target_link_libraries(ATAT_WalkerApp PRIVATE base_module_library)
 
-set_target_properties(GameMakerApp PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE") #./build/GameMakerApp.exe
+set_target_properties(ATAT_WalkerApp PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE") #./build/ATAT_WalkerApp.exe
 
 set(SDL2_DLLS
     "${SDL2_PATH}/lib/x64/SDL2.dll"
@@ -103,29 +96,14 @@ set(SDL2_DLLS
 )
 
 foreach(dll ${SDL2_DLLS})
-    add_custom_command(TARGET GameMakerApp POST_BUILD
+    add_custom_command(TARGET ATAT_WalkerApp POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${dll}"
-        $<TARGET_FILE_DIR:GameMakerApp>
+        $<TARGET_FILE_DIR:ATAT_WalkerApp>
         COMMENT "Kopiowanie ${dll} do folderu build..."
     )
 endforeach()
 
-add_executable(LandFilesLoader 
-  land_files.cpp 
-  src/FileManagement.cpp )
-target_link_libraries(LandFilesLoader PRIVATE base_module_library)
-
-set_target_properties(LandFilesLoader PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE")  #./build/LandFilesLoader.exe
-
-foreach(dll ${SDL2_DLLS})
-    add_custom_command(TARGET LandFilesLoader POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${dll}"
-        $<TARGET_FILE_DIR:LandFilesLoader>
-        COMMENT "Kopiowanie ${dll} do folderu build..."
-    )
-endforeach()
 
 #---------------------------------------------------------
 

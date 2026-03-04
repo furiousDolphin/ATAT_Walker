@@ -25,15 +25,6 @@ void MainMenuMode::create_buttons()
         context_.persistent_state.request_game_reload = true;
     };
     buttons_.add(std::make_unique<TextButton>(Vector2D<int>(0, 0), game_button_func, game_button_textures));
-
-
-    const auto* editor_button_textures = context_.graphics_manager.get_text_button_textures_ptr("EDITOR", GraphicsManager::MINECRAFT_24);
-    auto editor_button_func = [this]()
-    { 
-        context_.persistent_state.mode = ModeType::EDITOR;
-        context_.persistent_state.request_editor_reload = true;
-    };
-    buttons_.add(std::make_unique<TextButton>(Vector2D<int>(0, 40), editor_button_func, editor_button_textures));
 }
 
 void MainMenuMode::update()

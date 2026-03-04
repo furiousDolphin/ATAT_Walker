@@ -20,12 +20,6 @@
 
 
 
-class GameMode; 
-class EditorMode; 
-
-
-
-
 class App
 {
     public:
@@ -45,9 +39,6 @@ class App
         Uint32 last_time_;
         Uint32 current_time_;
         float delta_time_;
-
-        std::unique_ptr<GameMode>   game_mode_;
-        std::unique_ptr<EditorMode> editor_mode_;
 
         std::unordered_map< ModeType, std::unique_ptr<Mode> > modes_map_;
 };

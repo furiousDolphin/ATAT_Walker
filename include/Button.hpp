@@ -54,39 +54,6 @@ class TextButton : public Button
 };
 
 
-class EditorMenuButton : public Button
-{
-    public:
-        friend Buttons;
-
-        EditorMenuButton( 
-            Vector2D<int> pos,
-            std::function< void(int) > func, 
-            const std::vector< std::pair< int, const Texture* > >*  main_textures,
-            const std::vector< std::pair< int, const Texture* > >*  alt_textures = nullptr );
-
-    private:
-        bool update( const EventManager& event_manager ) override;
-        void render() const override;
-        int  get_id() const;                         
-        void update_rect(); 
-
-        const std::vector< std::pair< int, const Texture* > >* main_textures_;
-        const std::vector< std::pair< int, const Texture* > >* alt_textures_;
-        std::function< void(int) > func_;
-
-        int texture_index_;
-        bool main_active_;
-
-        Vector2D<int> referencial_pos_;
-};
-
-
-struct ButtonsContext
-{
-    EventManager& event_manager;
-    GraphicsManager& graphics_manager;
-};
 
 class Buttons
 {
