@@ -105,6 +105,7 @@ class Texture
 
         int get_width()  const { return width_;  }
         int get_height() const { return height_; }
+        Vector2D<int> get_shape() const { return {width_, height_}; } 
 
 
 

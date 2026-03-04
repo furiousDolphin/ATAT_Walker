@@ -1,0 +1,100 @@
+
+#include "Slider.hpp"
+
+
+Slider::SlideRect::SlideRect(
+    Vector2D<int> center, 
+    Vector2D<int> shape, 
+    SlideRect::Axis axis, 
+    std::function<Vector2D<int>(void)> getter,  
+    std::function<void(int)> setter
+) :
+    Rect{center.x-shape.x/2, center.y-shape.y/2, shape.x, shape.y}, 
+    axis_{axis},
+    getter_{getter},
+    setter_{setter}
+{
+
+}
+
+Vector2D<int> Slider::SlideRect::get_pos() const
+{
+    auto [x, y] = getter_();
+    return {x - rect_.w/2, y-rect_.h/2};
+
+}
+
+void Slider::SlideRect::set_pos(const Vector2D<int>& new_top_left)
+{
+    auto [x, y] = new_top_left;
+    switch ( axis_ )
+    {
+        case Axis::HORIZONTAL:
+            setter_(x+rect_.w/2);
+            break;
+        case Axis::VERTICAL:
+            setter_(y+rect_.h/2);
+            break;
+    }
+}
+
+bool Slider::SlideRect::collide_point(const Vector2D<int>& v) const
+{
+    auto [x, y] = this->get_pos();
+    return !( 
+        x >= v.x || 
+        v.x >= x + rect_.w || 
+        y >= v.y || 
+        v.y >= y + rect_.h );
+}
+
+Slider::Slider(
+    Vector2D<int> pos,
+    const GraphicsManager& graphics_manager,
+    double min_val, 
+    double max_val, 
+    double init_val, 
+    std::function< void(double) > fun
+) :
+    platform_rect_{pos, textures_.platform.get_shape()},
+    textures_{
+        graphics_manager.get_texture(GraphicsManager::SLIDER_MARKED_BUTTON),
+        graphics_manager.get_texture(GraphicsManager::SLIDER_UNMARKED_BUTTON),
+        graphics_manager.get_texture(GraphicsManager::SLIDER_PLATFORM)},
+    params_{
+        std::min( min_val, max_val),
+        std::max( min_val, max_val), 
+        std::max( min_val, std::min( init_val, max_val ) )},
+    fun_{fun}
+{
+    auto [w, h] = platform_rect_.get_shape();
+    top_pos_ = platform_rect_.get_pos() + Vector2D<int>{w/2, w/2};
+    bot_pos_ = top_pos_ + Vector2D<int>{0, (h - w)};
+    cur_pos_.x = platform_rect_.get_centerx();
+    cur_pos_.y = bot_pos_.y + (top_pos_.y - bot_pos_.y)*((max_val - min_val)/(params_.cur_val - min_val));
+
+    button_rect_ptr_ = std::make_unique<SlideRect>(
+        Vector2D<int>{}, 
+        textures_.unmarked_button.get_shape(),
+        SlideRect::Axis::VERTICAL, 
+        [this]()
+        {return cur_pos_;},
+        [this](int arg)
+        { cur_pos_.y = std::max( top_pos_.y, std::min( arg, bot_pos_.y ) );} );
+}
+
+double Slider::get_val() const
+{ 
+    const auto& [min_val, max_val, cur_val] = params_;
+    return min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y)); 
+}
+
+void Slider::update( const EventManager& event_manager )
+{
+
+}
+
+void Slider::render() const
+{
+
+}

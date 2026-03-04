@@ -37,7 +37,9 @@ class GraphicsManager
 
         enum SingularTextureKey
         {
-
+            SLIDER_MARKED_BUTTON,
+            SLIDER_UNMARKED_BUTTON,
+            SLIDER_PLATFORM
         };
 
         enum AnimationKey
@@ -98,7 +100,9 @@ class GraphicsManager
 
         inline static std::unordered_map<std::string, SingularTextureKey> singular_textures_as_path_key_map
         {
-
+            {"data/graphics/slider/marked.png", SLIDER_MARKED_BUTTON},
+            {"data/graphics/slider/unmarked.png", SLIDER_UNMARKED_BUTTON},
+            {"data/graphics/slider/platform.png", SLIDER_PLATFORM}
         };  
 
         inline static std::unordered_map<std::string, AnimationKey> animations_as_path_key_map

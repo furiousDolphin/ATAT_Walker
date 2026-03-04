@@ -37,6 +37,15 @@ class Rect
             rect_.w=w;
             rect_.h=h;
         }
+
+        constexpr Rect( const Vector2D<int>& v, const Vector2D<int>& shape )
+        {
+            rect_.x=v.x;
+            rect_.y=v.y;
+            rect_.w=shape.x;
+            rect_.h=shape.y;
+        }
+
         virtual ~Rect() = default;
 
         constexpr Rect( Rect&& other ) = default;

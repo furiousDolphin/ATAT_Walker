@@ -83,7 +83,8 @@ add_executable(ATAT_WalkerApp
   src/PersistentState.cpp
   src/MainMenuMode.cpp
   src/FileManagement.cpp
-  src/Animation.cpp )
+  src/Animation.cpp
+  src/Slider.cpp )
 target_link_libraries(ATAT_WalkerApp PRIVATE base_module_library)
 
 set_target_properties(ATAT_WalkerApp PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE") #./build/ATAT_WalkerApp.exe
