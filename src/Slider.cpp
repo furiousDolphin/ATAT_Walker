@@ -65,7 +65,8 @@ Slider::Slider(
         std::min( min_val, max_val),
         std::max( min_val, max_val), 
         std::max( min_val, std::min( init_val, max_val ) )},
-    fun_{fun}
+    fun_{fun},
+    marked_{false}
 {
     auto [w, h] = platform_rect_.get_shape();
     top_pos_ = platform_rect_.get_pos() + Vector2D<int>{w/2, w/2};
@@ -83,18 +84,68 @@ Slider::Slider(
         { cur_pos_.y = std::max( top_pos_.y, std::min( arg, bot_pos_.y ) );} );
 }
 
+Rect* Slider::get_colliding_rect_ptr(Vector2D<int> p)
+{
+
+}
+
 double Slider::get_val() const
 { 
     const auto& [min_val, max_val, cur_val] = params_;
     return min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y)); 
 }
 
-void Slider::update( const EventManager& event_manager )
+void Slider::update()
 {
 
 }
 
 void Slider::render() const
+{
+
+}
+
+Sliders::Sliders(
+    const EventManager& event_manager, 
+    const GraphicsManager& graphics_manager
+) :
+    context_{event_manager, graphics_manager}
+{
+
+}
+
+void Sliders::update()
+{
+    const EventManager& event_manager = context_.event_manager;
+    Vector2D<int> mouse_pos = event_manager.mouse_pos();
+
+    if (grabbed_)
+    {
+        if ( event_manager.left_got_unclicked() )
+        { 
+            (*grabbed_).update();
+            grabbed_.clear();
+        }
+        else if ( event_manager.left_is_clicked() && event_manager.mouse_motion() )
+        { grabbed_.update(mouse_pos); }
+    }
+
+    else if ( event_manager.left_got_clicked() )
+    {
+        for ( auto it = sliders_.rbegin(); it != sliders_.rend(); it++ )
+        {
+            auto& slider_ptr = *it;
+            Rect* grabbed_rect_ptr = slider_ptr->get_colliding_rect_ptr(mouse_pos);
+            if ( grabbed_rect_ptr )
+            {
+                grabbed_.set_new(slider_ptr.get(), grabbed_rect_ptr, mouse_pos );
+                break;
+            }
+        }
+    }
+}
+
+void Sliders::render() const
 {
 
 }

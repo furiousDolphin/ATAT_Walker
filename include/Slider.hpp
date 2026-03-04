@@ -43,11 +43,13 @@ class Slider
 
         double get_val() const;
     
-        void update( const EventManager& event_manager );
+        void update();
         void render() const;
 
 
     private:
+        Rect* get_colliding_rect_ptr(Vector2D<int> p);
+
         class SlideRect : public Rect
         {
             public:
@@ -78,6 +80,8 @@ class Slider
             const Texture& marked_button;
             const Texture& unmarked_button;
         } textures_;
+
+        bool marked_;
 
         struct Params
         {
