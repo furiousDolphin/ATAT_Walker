@@ -21,7 +21,6 @@ Vector2D<int> Slider::SlideRect::get_pos() const
 {
     auto [x, y] = getter_();
     return {x - rect_.w/2, y-rect_.h/2};
-
 }
 
 void Slider::SlideRect::set_pos(const Vector2D<int>& new_top_left)
@@ -58,9 +57,9 @@ Slider::Slider(
 ) :
     platform_rect_{pos, textures_.platform.get_shape()},
     textures_{
+        graphics_manager.get_texture(GraphicsManager::SLIDER_PLATFORM),
         graphics_manager.get_texture(GraphicsManager::SLIDER_MARKED_BUTTON),
-        graphics_manager.get_texture(GraphicsManager::SLIDER_UNMARKED_BUTTON),
-        graphics_manager.get_texture(GraphicsManager::SLIDER_PLATFORM)},
+        graphics_manager.get_texture(GraphicsManager::SLIDER_UNMARKED_BUTTON)},
     params_{
         std::min( min_val, max_val),
         std::max( min_val, max_val), 
@@ -72,7 +71,10 @@ Slider::Slider(
     top_pos_ = platform_rect_.get_pos() + Vector2D<int>{w/2, w/2};
     bot_pos_ = top_pos_ + Vector2D<int>{0, (h - w)};
     cur_pos_.x = platform_rect_.get_centerx();
-    cur_pos_.y = bot_pos_.y + (top_pos_.y - bot_pos_.y)*((max_val - min_val)/(params_.cur_val - min_val));
+    cur_pos_.y = bot_pos_.y + (top_pos_.y - bot_pos_.y)*((params_.cur_val - min_val)/(max_val - min_val));
+    std::cout << "top: "<< top_pos_.y << "\n";
+    std::cout << "bot: "<< bot_pos_.y << "\n";
+    std::cout << "cur: "<< cur_pos_.y << "\n";
 
     button_rect_ptr_ = std::make_unique<SlideRect>(
         Vector2D<int>{}, 
@@ -86,7 +88,11 @@ Slider::Slider(
 
 Rect* Slider::get_colliding_rect_ptr(Vector2D<int> p)
 {
-
+    if ( platform_rect_.collide_point(p) )
+    {
+        if ( button_rect_ptr_->collide_point(p) )
+        { return button_rect_ptr_.get(); }
+    }
 }
 
 double Slider::get_val() const
@@ -95,14 +101,23 @@ double Slider::get_val() const
     return min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y)); 
 }
 
-void Slider::update()
-{
+void Sliders::add(std::unique_ptr<Slider> slider_ptr)
+{ sliders_.push_back(std::move(slider_ptr)); }
 
-}
+void Slider::update()
+{}
 
 void Slider::render() const
 {
-
+    textures_.platform.render(platform_rect_.get_pos());
+    const Texture* button_texture_ptr = marked_ ? &textures_.marked_button : &textures_.unmarked_button;
+    if ( button_rect_ptr_ )
+    { 
+        auto [x, y] = button_rect_ptr_->get_pos();
+        button_texture_ptr->render(x, y); 
+        //std::cout << x << " : " << y <<"\n";
+        //std::cout << "rendersie wykonuje\n";
+    }
 }
 
 Sliders::Sliders(
@@ -123,14 +138,15 @@ void Sliders::update()
     {
         if ( event_manager.left_got_unclicked() )
         { 
-            (*grabbed_).update();
+            auto& slider = *grabbed_;
+            //slider.update();
             grabbed_.clear();
         }
         else if ( event_manager.left_is_clicked() && event_manager.mouse_motion() )
         { grabbed_.update(mouse_pos); }
     }
 
-    else if ( event_manager.left_got_clicked() )
+    else
     {
         for ( auto it = sliders_.rbegin(); it != sliders_.rend(); it++ )
         {
@@ -138,14 +154,50 @@ void Sliders::update()
             Rect* grabbed_rect_ptr = slider_ptr->get_colliding_rect_ptr(mouse_pos);
             if ( grabbed_rect_ptr )
             {
-                grabbed_.set_new(slider_ptr.get(), grabbed_rect_ptr, mouse_pos );
+                slider_ptr->marked_ = true;
+                if (event_manager.left_got_clicked())
+                { grabbed_.set_new(slider_ptr.get(), grabbed_rect_ptr, mouse_pos ); }
                 break;
             }
+            else
+            {slider_ptr->marked_ = false;}
         }
     }
 }
 
 void Sliders::render() const
 {
+    for ( const auto& slider_ptr : sliders_ )
+    { slider_ptr->render(); }
+}
 
+Sliders::GrabbedState::GrabbedState() :
+    active_{false},
+    obj_ptr_{nullptr},
+    rect_ptr_{nullptr}      
+{}          
+
+Slider& Sliders::GrabbedState::operator*() const 
+{ return *obj_ptr_; }
+Sliders::GrabbedState::operator bool() const 
+{ return active_; }
+void Sliders::GrabbedState::clear() 
+{
+    active_ = false;
+    obj_ptr_ = nullptr;
+    rect_ptr_ = nullptr;
+}
+void Sliders::GrabbedState::set_new(Slider* new_obj_ptr, Rect* new_rect_ptr, Vector2D<int> global_mouse_pos) 
+{   
+    obj_ptr_ = new_obj_ptr; 
+    rect_ptr_ = new_rect_ptr;
+    active_ = true;
+    offset_ = global_mouse_pos - new_rect_ptr->get_pos();
+}
+void Sliders::GrabbedState::update(Vector2D<int> global_mouse_pos)
+{   
+    if (active_)
+    { 
+        rect_ptr_->set_pos(global_mouse_pos-offset_);
+    }
 }

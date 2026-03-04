@@ -10,6 +10,7 @@
 #include "Mode.hpp"
 #include "Settings.hpp"
 #include "Button.hpp"
+#include "Slider.hpp"
 #include "EventManager.hpp"
 #include "GraphicsManager.hpp"
 #include "PersistentState.hpp"
@@ -34,6 +35,7 @@ class GameMode : public Mode
         void update();
         void render();
         void create_buttons();
+        void create_sliders();
         void import_data();
 
         Vector2D<int> origin_;
@@ -49,6 +51,7 @@ class GameMode : public Mode
         } context_;
 
         Buttons buttons_;
+        Sliders sliders_;
     };
 
 #endif

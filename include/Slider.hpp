@@ -85,8 +85,8 @@ class Slider
 
         struct Params
         {
-            double max_val;
             double min_val;
+            double max_val;
             double cur_val;
         } params_;
 
@@ -108,6 +108,7 @@ class Sliders
             const EventManager& event_manager, 
             const GraphicsManager& graphics_manager);
 
+        void add(std::unique_ptr<Slider> slider_ptr);
         void update();
         void render() const;
      
