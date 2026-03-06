@@ -21,16 +21,17 @@
 #include <boost/math/tools/roots.hpp>
 #include <boost/cstdint.hpp>
 
+#include <nlohmann/json.hpp>
+#include <fstream>
+#include <stdexcept>
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include "Texture.hpp"
 #include "Rect.hpp"
 #include "Settings.hpp"
 #include "ChebFunc.hpp"
 #include "AT_AT.hpp"
-
-
-using namespace boost::math::quadrature;
-using namespace boost::math::tools;
-
 
 
 AT_AT::AT_AT(
@@ -65,7 +66,49 @@ const AT_AT::Params::LegsParams& AT_AT::Params::get_leg_params() const
 
 void AT_AT::Params::create_data()
 {
-    //json
+    char* base_path = SDL_GetBasePath();
+    if (!base_path)
+    { throw std::runtime_error("nie udalo sie pobrac base path w AT_AT::Params::create_data()"); }
+
+    fs::path exe_path{base_path};
+    SDL_free(base_path);
+    fs::path root_path = exe_path.parent_path().parent_path();
+    fs::path file_path = root_path / fs::path{"params.json"};
+
+    std::ifstream file{file_path};
+    if (!file.is_open())
+    { throw std::runtime_error("nie udalo sie otworzyc json w AT_AT::Params::create_data()");}
+
+    nlohmann::json j;
+    file >> j;
+
+    auto safe_get_string = 
+    [](
+        const nlohmann::json& object, 
+        const std::string& key, 
+        const std::string default_value
+    )
+    {
+        if ( object.contains(key) && !object[key].is_null() )
+        { return object[key].get<std::string>(); }
+        return default_value;
+    };
+
+    ellipse_.a = std::stod(safe_get_string(j, "a", "80.0"));
+    ellipse_.b = std::stod(safe_get_string(j, "b", "36.0"));
+    ellipse_.N = std::stoi(safe_get_string(j, "N", "0"));
+    legs_.phi_zero = std::stod(safe_get_string(j, "phi_zero", "80.0"));
+    legs_.h = std::stod(safe_get_string(j, "h", "375.0"));
+    legs_.k = std::stod(safe_get_string(j, "k", "220.0"));
+
+    //nad ponizszym kodem trzeba popracowac ( default value i bezpieczenstwo )
+
+    legs_.axis.x = j["axis"]["x"].get<int>();
+    legs_.axis.y = j["axis"]["y"].get<int>();
+    legs_.segment_lengths[0] = j["segment_lengths"]["l1"].get<double>();
+    legs_.segment_lengths[1] = j["segment_lengths"]["l2"].get<double>();
+    legs_.segment_lengths[2] = j["segment_lengths"]["l3"].get<double>();
+    legs_.segment_lengths[3] = j["segment_lengths"]["l4"].get<double>();
 }     
 
 
