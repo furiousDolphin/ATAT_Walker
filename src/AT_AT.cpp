@@ -32,22 +32,62 @@ using namespace boost::math::quadrature;
 using namespace boost::math::tools;
 
 
-double KinematicsProvider::find_phi_for_x(double x, double phi_zero)
-{ 
-    double PI = std::numbers::pi;
-    return (PI/2-phi_zero)/ellipse_params_.a * x + PI/2; 
+
+AT_AT::AT_AT(
+    const GraphicsManager& graphics_manager, 
+    const float& dt
+) :
+    context_{graphics_manager, dt},
+    kinematics_provider_ptr_{std::make_unique<KinematicsProvider>(params_)},
+    legs_ptr_{std::make_unique<Legs>(graphics_manager, *(kinematics_provider_ptr_.get()), dt, params_)}
+{
+
 }
 
-std::pair<double, Vector2D<double>> KinematicsProvider::find_theta_e_vec_for_x(double x)
+void AT_AT::update()
+{ legs_ptr_->update(); }
+
+void AT_AT::render() const
+{ legs_ptr_->render(); }
+
+void AT_AT::set_speed( double speed )
+{ speed_ = speed; }
+
+AT_AT::Params::Params()
+{ 
+    this->create_data();
+}
+
+const AT_AT::Params::EllipseParams& AT_AT::Params::get_ellipse_params() const
+{ return ellipse; }
+const AT_AT::Params::LegsParams& AT_AT::Params::get_leg_params() const
+{ return legs; }
+
+void AT_AT::Params::create_data()
 {
-    auto& [e_a, e_b, N, total_arc_len] = ellipse_params_;
+    //json
+}     
+
+
+double KinematicsProvider::find_phi_for_x(double x) const
+{ 
+    double PI = std::numbers::pi;
+    const auto& params = context_.params;
+    double phi_zero = params.get_leg_params().phi_zero;
+    double a = params.get_ellipse_params().a;
+    return (PI/2-phi_zero)/a * x + PI/2; 
+}
+
+std::pair<double, Vector2D<double>> KinematicsProvider::find_theta_e_vec_for_x(double x) const
+{
+    const auto& [e_a, e_b, N] = context_.params.get_ellipse_params();
     double arc_len = this->find_arc_len_for_x(x);
     
-    std::size_t idx = std::min<std::size_t>(N - 1, static_cast<std::size_t>(N * arc_len / total_arc_len));
+    std::size_t idx = std::min<std::size_t>(N - 1, static_cast<std::size_t>(N * arc_len / total_arc_len_));
     return theta_e_vec_table_[idx];
 }
 
-double KinematicsProvider::find_arc_len_for_x(double x)
+double KinematicsProvider::find_arc_len_for_x(double x) const
 {
     //e_a, e_b
     //(x = e_a -> arc_len = 0) & (x = -e_a -> arc_len = total_arc_len)
@@ -55,20 +95,20 @@ double KinematicsProvider::find_arc_len_for_x(double x)
     //A*(-e_a) + B = total_arc_len
     //B = total_arc_len/2 & A = (-1)*total_arc_len/(2*e_a)
 
-    auto& [ellipse_a_parameter, ellipse_b_parameter, N, total_arc_len] = ellipse_params_;
-    if (std::abs(x) >= ellipse_a_parameter )
+    const auto& [e_a, e_b, N] = context_.params.get_ellipse_params();
+    if (std::abs(x) >= e_a )
     { throw std::runtime_error("podany x nie nalezy do przedzialu [-e_a, e_a]"); }
-    double A = (-1.0)*total_arc_len/(2*ellipse_a_parameter);
-    double B = total_arc_len/2;
+    double A = (-1.0)*total_arc_len_/(2*e_a);
+    double B = total_arc_len_/2;
     return A*x+B;
 }
 
-double KinematicsProvider::find_arc_len_for_theta(double theta)
+double KinematicsProvider::find_arc_len_for_theta(double theta) const
 {
-    auto& [ellipse_a_parameter, ellipse_b_parameter, N, total_arc_length] = ellipse_params_;
+    const auto& [e_a, e_b, N] = context_.params.get_ellipse_params();
     auto integrand = [&](double t) 
-    { return std::sqrt( std::pow(ellipse_a_parameter*std::sin(t), 2) + 
-                        std::pow(ellipse_b_parameter*std::cos(t), 2) ); };
+    { return std::sqrt( std::pow(e_a*std::sin(t), 2) + 
+                        std::pow(e_b*std::cos(t), 2) ); };
 
     boost::math::quadrature::gauss_kronrod<double, 61> integrator;
 
@@ -77,10 +117,10 @@ double KinematicsProvider::find_arc_len_for_theta(double theta)
 
 void KinematicsProvider::create_ellipse_data()
 {
-    auto& [e_a, e_b, N, total_arc_len] = ellipse_params_;
+    auto& [e_a, e_b, N] = context_.params.get_ellipse_params();
 
     std::pair<double, double> theta_range{0, std::numbers::pi};
-    total_arc_len = this->find_arc_len_for_theta(theta_range.second);
+    total_arc_len_ = this->find_arc_len_for_theta(theta_range.second);
     
     Eigen::VectorXd cheb_nodes = ChebNodes(64, theta_range.first, theta_range.second);
     Eigen::VectorXd cheb_nodes_vals = cheb_nodes.unaryExpr(
@@ -109,7 +149,7 @@ void KinematicsProvider::create_ellipse_data()
     } 
 }
 
-Leg::Geometry KinematicsProvider::compute_movement_params(double x, const Leg::Params& leg_params, Leg::Type leg_type, Leg::Phase leg_phase) const
+Leg::Geometry KinematicsProvider::compute_movement_params(double x, Leg::Type leg_type, Leg::Phase leg_phase) const
 {
     double gx, gy;
     double ex, ey;
@@ -123,13 +163,18 @@ Leg::Geometry KinematicsProvider::compute_movement_params(double x, const Leg::P
     double theta;
     double phi;
 
-    auto& [e_a, e_b, N, total_arc_len] = ellipse_params_;
-    auto& [phi_zero, h, k, segment_lengths, axis] = leg_params;
+    const auto& params = context_.params;
+
+    const auto& [e_a, e_b, N] = params.get_ellipse_params();
+    const auto& [phi_zero, h, _, segment_lengths, axis] = params.get_leg_params();
+    double k = (leg_type == Leg::BACK_LEFT || leg_type == Leg::BACK_RIGHT ) 
+        ? -params.get_leg_params().k 
+        : params.get_leg_params().k;
     auto [l1, l2, l3, l4] = segment_lengths;
     auto [theta, e_vec] = this->find_theta_e_vec_for_x(x);
     auto [ex, ey] = e_vec;
 
-    phi = this->find_phi_for_x(x, phi_zero);
+    phi = this->find_phi_for_x(x);
 
     cos3 = std::cos(phi);
     sin3 = std::sin(phi);
@@ -192,8 +237,8 @@ Leg::Geometry KinematicsProvider::compute_movement_params(double x, const Leg::P
     return Leg::Geometry{{v1, v2, v3, v4}, {angle1, angle2, angle3}};
 }
 
-
 Leg::Leg(
+    const AT_AT::Params& params,
     double x_init, 
     Vector2D<double> pos, 
     Type type 
@@ -201,51 +246,48 @@ Leg::Leg(
     x_{x_init},
     pos_{pos},
     type_{type},
-    speed_{20.0}
+    speed_{20.0},
+    distance_{x_ + params.get_ellipse_params().a}
 {
-    throw std::runtime_error("dokonczyc konstruktor leg");
-    //distance_ = x_ + ellipse_a_parameter_;
-
-    // if( type_ == BACK_LEFT || type_ == BACK_RIGHT ) 
-    // { params_.k = -params_.k; }   
+  
 }
 
-void Leg::update(const KinematicsProvider& kinematics_provider, float dt)
+void Leg::update(const KinematicsProvider& kinematics_provider, const AT:AT::Params& params, float dt)
 {
-    auto [e_a, e_b, N, total_arc_len] = ellipse_params_;
+    auto [e_a, e_b, N] = params.get_ellipse_params();
 
     if( x_ <= -4.0*e_a || x_ >= 4.0*e_a) 
     { x_ = 0;}
     else if( (x_ < 3.0*e_a && x_ > 1.0*e_a) )
     {
-        kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, params_, type_, STEP );
+        kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, type_, STEP );
         velocity_ = 3*speed_;
     }
     else if( (x_ > -3.0*e_a && x_ < -1.0*e_a) )
     {
-        kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, params_, type_, STEP );
+        kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, type_, STEP );
         velocity_ = 3*speed_;
     }
     else if( x_ >= -1.0*e_a && x_ <= 1.0*e_a)
     {
-        kinematics_provider.compute_movement_params( x_, params_, type_, STROKE );
+        kinematics_provider.compute_movement_params( x_, type_, STROKE );
         velocity_ = speed_;
     }
     else if( x_ > 3.0*e_a )
     {
-        kinematics_provider.compute_movement_params( x_ - 4.0*e_a, params_, type_, STROKE );
+        kinematics_provider.compute_movement_params( x_ - 4.0*e_a, type_, STROKE );
         velocity_ = speed_;
     }
     else if( x_ < -3.0*e_a )
     {
-        kinematics_provider.compute_movement_params( x_ - 4.0*e_a, params_, type_, STROKE );
+        kinematics_provider.compute_movement_params( x_ - 4.0*e_a, type_, STROKE );
         velocity_ = speed_;
     }
 
     x_ += velocity_*dt;
 }
 
-void Leg::render(const GraphicsManager& graphics_manager) const
+void Leg::render(const GraphicsManager& graphics_manager, const AT:AT::Params& params) const
 {
     constexpr std::size_t N = 3;
     std::array<GraphicsManager::SingularTextureKey, N> keys
@@ -255,8 +297,9 @@ void Leg::render(const GraphicsManager& graphics_manager) const
         GraphicsManager::ATAT_LEG_SEGMENT_3
     };
 
-    auto double_axis = static_cast<Vector2D<double>>(params_.axis);
-    auto sdl_axis = static_cast<SDL_Point>(params_.axis);    
+    const auto& legs_params = params.get_leg_params();
+    auto double_axis = static_cast<Vector2D<double>>(legs_params.axis);
+    auto sdl_axis = static_cast<SDL_Point>(legs_params.axis);    
 
     for ( std::size_t idx = 0; idx < N; idx++ )
     {
@@ -268,3 +311,35 @@ void Leg::render(const GraphicsManager& graphics_manager) const
 
 void Leg::set_speed(double speed)
 { speed_ = speed; }
+
+Legs::Legs(
+    const GraphicsManager& graphics_manager, 
+    const KinematicsProvider& kinematics_provider, 
+    const float& dt,
+    const AT_AT::Params& params
+) :
+    context_{graphics_manager, kinematics_provider, dt, params},
+    legs_
+    {
+        Leg{params, -1.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 + 100, 0 }, Leg::Type::FRONT_LEFT},
+        Leg{params, -1.0/3.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 - 100, 0 }, Leg::Type::BACK_LEFT},
+        Leg{params, 1.0/3.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 + 100, 0 }, Leg::Type::FRONT_RIGHT},
+        Leg{params, 1.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 - 100, 0 }, Leg::Type::BACK_RIGHT}         
+    }
+{
+    
+}
+
+void Legs::update()
+{
+    const auto& [graphics_manager, kinematics_provider, dt, params] = context_;
+    for ( auto& leg : legs_ )
+    { leg.update(kinematics_provider, params, dt); }
+}
+
+void Legs::render() const
+{
+    const auto& [graphics_manager, kinematics_provider, dt, params] = context_;
+    for ( auto& leg : legs_ )
+    { leg.render(graphics_manager, params); }
+}

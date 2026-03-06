@@ -15,14 +15,72 @@ inline constexpr double to_radians(double degrees)
 inline constexpr double to_degrees(double radians) 
 { return radians * 180.0 / PI; }
 
+
+class KinematicsProvider;
+class Legs;
+
+class AT_AT
+{
+    public:
+        AT_AT(const GraphicsManager& graphics_manager, const float& dt);
+        
+        void update();
+        void render() const;
+        void set_speed( double speed );
+
+        class Params
+        {
+            public:
+                Params();
+
+                struct EllipseParams
+                {
+                    double a;
+                    double b;
+                    std::size_t N;        
+                };
+
+                struct LegsParams
+                {
+                    double phi_zero;
+                    double h;
+                    double k;
+                    std::array<double, 4> segment_lengths;
+                    Vector2D<int> axis;
+                };
+
+                const EllipseParams& get_ellipse_params() const;
+                const LegsParams& get_leg_params() const;
+
+            private:
+                void create_data();
+
+                EllipseParams ellipse;
+                LegsParams legs;
+        };
+
+    private:
+        struct Context
+        {
+            const GraphicsManager& graphics_manager;
+            const float& dt;
+        } context_;
+
+        Params params_;
+        std::unique_ptr<KinematicsProvider> kinematics_provider_ptr_;
+        std::unique_ptr<Legs> legs_ptr_; 
+        double speed_;     
+};
+
+
 class KinematicsProvider;
 class Leg
 {   
     public:
         enum Type;
-        Leg(double x_init, Vector2D<double> pos, Type type );
-        void update(const KinematicsProvider& kinematics_provider, float dt);
-        void render(const GraphicsManager& graphics_manager) const;
+        Leg(const AT_AT::Params& params, double x_init, Vector2D<double> pos, Type type);
+        void update(const KinematicsProvider& kinematics_provider, const AT_AT::Params& params, float dt);
+        void render(const GraphicsManager& graphics_manager, const AT_AT::Params& params) const;
         void set_speed(double speed);
 
         enum Type 
@@ -45,27 +103,9 @@ class Leg
             std::array<double, 3> angles;
         };
 
-        struct Params
-        {
-            double phi_zero;
-            double h;
-            double k;
-            std::array<double, 4> segment_lengths;
-            Vector2D<int> axis;
-        };
-
-        struct EllipseParams
-        {
-            double a;
-            double b;
-            std::size_t N;
-            double total_arc_len;
-        } ellipse_params_;
-
     private:
         Type type_;
         Geometry geometry_;
-        Params params_;
 
         double x_;
         double distance_;
@@ -77,45 +117,45 @@ class Leg
 class KinematicsProvider
 {
     public:
-        KinematicsProvider();
-
-        Leg::Geometry compute_movement_params(double x, const Leg::Params& leg_params, Leg::Type leg_type, Leg::Phase leg_phase) const;
+        KinematicsProvider(const AT_AT::Params& params);
+        Leg::Geometry compute_movement_params(double x, Leg::Type leg_type, Leg::Phase leg_phase) const;
     private:
-        double find_phi_for_x(double x, double phi_zero);
-        std::pair<double, Vector2D<double>> find_theta_e_vec_for_x(double x);
-        double find_arc_len_for_x(double x);
-        double find_arc_len_for_theta(double theta);
+        double find_phi_for_x(double x) const;
+        std::pair<double, Vector2D<double>> find_theta_e_vec_for_x(double x) const;
+        double find_arc_len_for_x(double x) const;
+        double find_arc_len_for_theta(double theta) const;
         void create_ellipse_data();
 
-        struct EllipseParams
+        struct Context
         {
-            double a;
-            double b;
-            std::size_t N;
-            double total_arc_len;
-        } ellipse_params_;
+            const AT_AT::Params& params;
+        } context_;
 
         std::vector<std::pair<double, Vector2D<double>>> theta_e_vec_table_;
+        double total_arc_len_;
 };
 
-class AT_AT
+class Legs
 {
     public:
-        AT_AT(const GraphicsManager& graphics_manager, const KinematicsProvider& kinematics_provider, const float& dt);
-        
+        Legs(
+            const GraphicsManager& graphics_manager, 
+            const KinematicsProvider& kinematics_provider, 
+            const float& dt,
+            const AT_AT::Params& params);
         void update();
         void render() const;
-        void set_speed( double speed );
+
     private:
-        struct Context
+        struct
         {
             const GraphicsManager& graphics_manager;
             const KinematicsProvider& kinematics_provider;
             const float& dt;
+            const AT_AT::Params& params;
         } context_;
 
-        std::vector<Leg> legs_;      
+        std::array<Leg, 4> legs_;
 };
-
 
 #endif
