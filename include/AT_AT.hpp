@@ -55,8 +55,8 @@ class AT_AT
             private:
                 void create_data();
 
-                EllipseParams ellipse;
-                LegsParams legs;
+                EllipseParams ellipse_;
+                LegsParams legs_;
         };
 
     private:

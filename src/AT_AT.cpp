@@ -59,9 +59,9 @@ AT_AT::Params::Params()
 }
 
 const AT_AT::Params::EllipseParams& AT_AT::Params::get_ellipse_params() const
-{ return ellipse; }
+{ return ellipse_; }
 const AT_AT::Params::LegsParams& AT_AT::Params::get_leg_params() const
-{ return legs; }
+{ return legs_; }
 
 void AT_AT::Params::create_data()
 {
@@ -252,7 +252,7 @@ Leg::Leg(
   
 }
 
-void Leg::update(const KinematicsProvider& kinematics_provider, const AT:AT::Params& params, float dt)
+void Leg::update(const KinematicsProvider& kinematics_provider, const AT_AT::Params& params, float dt)
 {
     auto [e_a, e_b, N] = params.get_ellipse_params();
 
@@ -287,7 +287,7 @@ void Leg::update(const KinematicsProvider& kinematics_provider, const AT:AT::Par
     x_ += velocity_*dt;
 }
 
-void Leg::render(const GraphicsManager& graphics_manager, const AT:AT::Params& params) const
+void Leg::render(const GraphicsManager& graphics_manager, const AT_AT::Params& params) const
 {
     constexpr std::size_t N = 3;
     std::array<GraphicsManager::SingularTextureKey, N> keys
