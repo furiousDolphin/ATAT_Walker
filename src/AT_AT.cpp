@@ -20,6 +20,8 @@
 #include <boost/math/quadrature/gauss_kronrod.hpp>
 #include <boost/math/tools/roots.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/numeric/odeint.hpp>
+#include <boost/numeric/odeint/external/eigen/eigen.hpp>
 
 #include <nlohmann/json.hpp>
 #include <fstream>

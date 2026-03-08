@@ -1,6 +1,8 @@
 #ifndef AT_AT_HPP_
 #define AT_AT_HPP_
 
+#include <Eigen/Dense>
+
 #include "Vector2D.hpp"
 #include "FileManagement.hpp"
 #include "GraphicsManager.hpp"
