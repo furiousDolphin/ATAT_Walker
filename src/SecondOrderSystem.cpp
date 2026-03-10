@@ -11,7 +11,7 @@ void SecondOrderSystem::operator()(const Eigen::VectorXd& X, Eigen::VectorXd& dX
 {
     double v = X[0];
     double v_prim = X[1];
-    //x'a moge podawac do konstruktora jako ptr, albo napisać setter który by sutawiał ten wskaźnik
+    //x'a moge podawac do konstruktora jako ptr, albo napisać setter który by ustawiał ten wskaźnik
 
     dXdt[0] = v_prim;
 
