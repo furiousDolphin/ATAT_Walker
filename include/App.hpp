@@ -45,4 +45,18 @@ class App
 
 
 
+using DoubleSetter = std::function<void(double)>;
+using DoubleGetter = std::function<double(void)>;
+
+class ValueManager  //to trzeba do pybind wyslac
+{
+    public:
+        ValueManager();
+        double get_val() const;
+        DoubleGetter getter;
+        DoubleSetter setter;
+    private:
+        double val_;
+};
+
 #endif

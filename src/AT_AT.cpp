@@ -114,6 +114,12 @@ void AT_AT::Params::create_data()
 }     
 
 
+KinematicsProvider::KinematicsProvider(const AT_AT::Params& params) :
+    context_{params}
+{
+
+}
+
 double KinematicsProvider::find_phi_for_x(double x) const
 { 
     double PI = std::numbers::pi;
@@ -197,16 +203,12 @@ void KinematicsProvider::create_ellipse_data()
 Leg::Geometry KinematicsProvider::compute_movement_params(double x, Leg::Type leg_type, Leg::Phase leg_phase) const
 {
     double gx, gy;
-    double ex, ey;
 
     double sin1, cos1;
     double sin2, cos2;
     double sin3, cos3;
 
     double A, B, C, D;
-
-    double theta;
-    double phi;
 
     const auto& params = context_.params;
 
@@ -219,7 +221,7 @@ Leg::Geometry KinematicsProvider::compute_movement_params(double x, Leg::Type le
     auto [theta, e_vec] = this->find_theta_e_vec_for_x(x);
     auto [ex, ey] = e_vec;
 
-    phi = this->find_phi_for_x(x);
+    double phi = this->find_phi_for_x(x);
 
     cos3 = std::cos(phi);
     sin3 = std::sin(phi);
