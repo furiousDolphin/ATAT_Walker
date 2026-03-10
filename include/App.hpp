@@ -43,4 +43,6 @@ class App
         std::unordered_map< ModeType, std::unique_ptr<Mode> > modes_map_;
 };
 
+
+
 #endif

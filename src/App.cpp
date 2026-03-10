@@ -38,4 +38,3 @@ void App::run()
         event_manager_.update();
     } 
 }
-
