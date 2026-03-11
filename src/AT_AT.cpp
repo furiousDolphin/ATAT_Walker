@@ -38,11 +38,12 @@ namespace fs = std::filesystem;
 
 AT_AT::AT_AT(
     const GraphicsManager& graphics_manager, 
-    const float& dt
+    const float& dt,
+    const std::function<double(void)> speed_getter
 ) :
-    context_{graphics_manager, dt},
+    context_{graphics_manager, dt, speed_getter},
     kinematics_provider_ptr_{std::make_unique<KinematicsProvider>(params_)},
-    legs_ptr_{std::make_unique<Legs>(graphics_manager, *(kinematics_provider_ptr_.get()), dt, params_)}
+    legs_ptr_{std::make_unique<Legs>(graphics_manager, *(kinematics_provider_ptr_.get()), dt, speed_getter, params_)}
 {
 
 }
@@ -52,9 +53,6 @@ void AT_AT::update()
 
 void AT_AT::render() const
 { legs_ptr_->render(); }
-
-void AT_AT::set_speed( double speed )
-{ speed_ = speed; }
 
 AT_AT::Params::Params()
 { 
@@ -96,21 +94,48 @@ void AT_AT::Params::create_data()
         return default_value;
     };
 
-    ellipse_.a = std::stod(safe_get_string(j, "a", "80.0"));
-    ellipse_.b = std::stod(safe_get_string(j, "b", "36.0"));
-    ellipse_.N = std::stoi(safe_get_string(j, "N", "0"));
-    legs_.phi_zero = std::stod(safe_get_string(j, "phi_zero", "80.0"));
-    legs_.h = std::stod(safe_get_string(j, "h", "375.0"));
-    legs_.k = std::stod(safe_get_string(j, "k", "220.0"));
+    // ellipse_.a = std::stod(safe_get_string(j, "a", "80.0"));
+    // ellipse_.b = std::stod(safe_get_string(j, "b", "36.0"));
+    // ellipse_.N = std::stoi(safe_get_string(j, "N", "0"));
+    // legs_.phi_zero = std::stod(safe_get_string(j, "phi_zero", "80.0"));
+    // legs_.h = std::stod(safe_get_string(j, "h", "375.0"));
+    // legs_.k = std::stod(safe_get_string(j, "k", "220.0"));
 
-    //nad ponizszym kodem trzeba popracowac ( default value i bezpieczenstwo )
+    // //nad ponizszym kodem trzeba popracowac ( default value i bezpieczenstwo )
 
-    legs_.axis.x = j["axis"]["x"].get<int>();
-    legs_.axis.y = j["axis"]["y"].get<int>();
-    legs_.segment_lengths[0] = j["segment_lengths"]["l1"].get<double>();
-    legs_.segment_lengths[1] = j["segment_lengths"]["l2"].get<double>();
-    legs_.segment_lengths[2] = j["segment_lengths"]["l3"].get<double>();
-    legs_.segment_lengths[3] = j["segment_lengths"]["l4"].get<double>();
+    // legs_.axis.x = j["axis"]["x"].get<int>();
+    // legs_.axis.y = j["axis"]["y"].get<int>();
+    // legs_.segment_lengths[0] = j["segment_lengths"]["l1"].get<double>();
+    // legs_.segment_lengths[1] = j["segment_lengths"]["l2"].get<double>();
+    // legs_.segment_lengths[2] = j["segment_lengths"]["l3"].get<double>();
+    // legs_.segment_lengths[3] = j["segment_lengths"]["l4"].get<double>();
+
+
+    // 1. Dostęp do sekcji "ellipse"
+    auto& j_ellipse = j["ellipse"];
+    ellipse_.a = j_ellipse.value("a", 80.0);
+    ellipse_.b = j_ellipse.value("b", 36.0);
+    ellipse_.N = j_ellipse.value("N", 1440);
+
+    // 2. Dostęp do sekcji "leg"
+    auto& j_leg = j["leg"];
+    legs_.phi_zero = j_leg.value("phi_zero", 80.0);
+    legs_.h = j_leg.value("h", 375.0);
+    legs_.k = j_leg.value("k", 220.0);
+
+    // 3. Obsługa zagnieżdżonych obiektów wewnątrz "leg"
+    if (j_leg.contains("axis")) {
+        legs_.axis.x = j_leg["axis"].value("x", 20);
+        legs_.axis.y = j_leg["axis"].value("y", 20);
+    }
+
+    if (j_leg.contains("segment_lengths")) {
+        auto& j_seg = j_leg["segment_lengths"];
+        legs_.segment_lengths[0] = j_seg.value("l1", 200.0);
+        legs_.segment_lengths[1] = j_seg.value("l2", 200.0);
+        legs_.segment_lengths[2] = j_seg.value("l3", 200.0);
+        legs_.segment_lengths[3] = j_seg.value("l4", 200.0);
+    }
 }     
 
 
@@ -293,14 +318,18 @@ Leg::Leg(
     x_{x_init},
     pos_{pos},
     type_{type},
-    speed_{20.0},
     distance_{x_ + params.get_ellipse_params().a}
 {
   
 }
 
-void Leg::update(const KinematicsProvider& kinematics_provider, const AT_AT::Params& params, float dt)
+void Leg::update(
+    const KinematicsProvider& kinematics_provider, 
+    const AT_AT::Params& params, 
+    float dt, 
+    std::function<double(void)> speed_getter)
 {
+    double speed = speed_getter();
     auto [e_a, e_b, N] = params.get_ellipse_params();
 
     if( x_ <= -4.0*e_a || x_ >= 4.0*e_a) 
@@ -308,27 +337,27 @@ void Leg::update(const KinematicsProvider& kinematics_provider, const AT_AT::Par
     else if( (x_ < 3.0*e_a && x_ > 1.0*e_a) )
     {
         kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, type_, STEP );
-        velocity_ = 3*speed_;
+        velocity_ = 3*speed;
     }
     else if( (x_ > -3.0*e_a && x_ < -1.0*e_a) )
     {
         kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, type_, STEP );
-        velocity_ = 3*speed_;
+        velocity_ = 3*speed;
     }
     else if( x_ >= -1.0*e_a && x_ <= 1.0*e_a)
     {
         kinematics_provider.compute_movement_params( x_, type_, STROKE );
-        velocity_ = speed_;
+        velocity_ = speed;
     }
     else if( x_ > 3.0*e_a )
     {
         kinematics_provider.compute_movement_params( x_ - 4.0*e_a, type_, STROKE );
-        velocity_ = speed_;
+        velocity_ = speed;
     }
     else if( x_ < -3.0*e_a )
     {
         kinematics_provider.compute_movement_params( x_ - 4.0*e_a, type_, STROKE );
-        velocity_ = speed_;
+        velocity_ = speed;
     }
 
     x_ += velocity_*dt;
@@ -356,16 +385,14 @@ void Leg::render(const GraphicsManager& graphics_manager, const AT_AT::Params& p
     }
 }
 
-void Leg::set_speed(double speed)
-{ speed_ = speed; }
-
 Legs::Legs(
     const GraphicsManager& graphics_manager, 
     const KinematicsProvider& kinematics_provider, 
     const float& dt,
+    const std::function<double(void)> speed_getter,
     const AT_AT::Params& params
 ) :
-    context_{graphics_manager, kinematics_provider, dt, params},
+    context_{graphics_manager, kinematics_provider, dt, speed_getter, params},
     legs_
     {
         Leg{params, -1.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 + 100, 0 }, Leg::Type::FRONT_LEFT},
@@ -379,14 +406,14 @@ Legs::Legs(
 
 void Legs::update()
 {
-    const auto& [graphics_manager, kinematics_provider, dt, params] = context_;
+    const auto& [graphics_manager, kinematics_provider, dt, speed_getter, params] = context_;
     for ( auto& leg : legs_ )
-    { leg.update(kinematics_provider, params, dt); }
+    { leg.update(kinematics_provider, params, dt, speed_getter); }
 }
 
 void Legs::render() const
 {
-    const auto& [graphics_manager, kinematics_provider, dt, params] = context_;
+    const auto& [graphics_manager, kinematics_provider, dt, speed_getter, params] = context_;
     for ( auto& leg : legs_ )
     { leg.render(graphics_manager, params); }
 }

@@ -24,11 +24,13 @@ class Legs;
 class AT_AT
 {
     public:
-        AT_AT(const GraphicsManager& graphics_manager, const float& dt);
+        AT_AT(
+            const GraphicsManager& graphics_manager, 
+            const float& dt,
+            const std::function<double(void)> speed_getter);
         
         void update();
         void render() const;
-        void set_speed( double speed );
 
         class Params
         {
@@ -66,12 +68,12 @@ class AT_AT
         {
             const GraphicsManager& graphics_manager;
             const float& dt;
+            std::function<double(void)> speed_getter;
         } context_;
 
         Params params_;
         std::unique_ptr<KinematicsProvider> kinematics_provider_ptr_;
-        std::unique_ptr<Legs> legs_ptr_; 
-        double speed_;     
+        std::unique_ptr<Legs> legs_ptr_;   
 };
 
 
@@ -81,9 +83,12 @@ class Leg
     public:
         enum Type;
         Leg(const AT_AT::Params& params, double x_init, Vector2D<double> pos, Type type);
-        void update(const KinematicsProvider& kinematics_provider, const AT_AT::Params& params, float dt);
+        void update(
+            const KinematicsProvider& kinematics_provider, 
+            const AT_AT::Params& params, 
+            float dt, 
+            std::function<double(void)> speed_getter);
         void render(const GraphicsManager& graphics_manager, const AT_AT::Params& params) const;
-        void set_speed(double speed);
 
         enum Type 
         { 
@@ -112,7 +117,6 @@ class Leg
         double x_;
         double distance_;
         double velocity_;
-        double speed_;
         Vector2D<double> pos_;
 };
 
@@ -144,6 +148,7 @@ class Legs
             const GraphicsManager& graphics_manager, 
             const KinematicsProvider& kinematics_provider, 
             const float& dt,
+            const std::function<double(void)> speed_getter,
             const AT_AT::Params& params);
         void update();
         void render() const;
@@ -154,6 +159,7 @@ class Legs
             const GraphicsManager& graphics_manager;
             const KinematicsProvider& kinematics_provider;
             const float& dt;
+            const std::function<double(void)> speed_getter;
             const AT_AT::Params& params;
         } context_;
 
