@@ -27,8 +27,9 @@
 class GraphicsManager
 {
     public:
-        GraphicsManager( SDL_Renderer* renderer );
-        ~GraphicsManager() = default;
+        GraphicsManager() = default;
+        void init(SDL_Renderer* renderer);
+
 
         enum VectorizedTextureKey
         {

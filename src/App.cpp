@@ -6,35 +6,56 @@
 #include "GameMode.hpp"
 #include "MainMenuMode.hpp"
 
-App::App( SDL_Window* window, SDL_Renderer* renderer ) :
-    window_{window},
-    renderer_{renderer},
+App::App(OscilloscopeInputs& oscilloscope_inputs) :
+    window_{nullptr},
+    renderer_{nullptr},
     event_manager_{},
-    graphics_manager_{renderer},
+    graphics_manager_{},
     persistent_state_{""},
     modes_map_{}
 {
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    if (!this->init())
+    { throw std::runtime_error("SDL nie ruszyl"); }
 
-    modes_map_.emplace(ModeType::GAME, std::make_unique<GameMode>  ( renderer_, event_manager_, graphics_manager_, persistent_state_, delta_time_) );
-    modes_map_.emplace(ModeType::MAIN_MENU, std::make_unique<MainMenuMode>( renderer_, event_manager_, graphics_manager_, persistent_state_, delta_time_) );
-
+    try
+    {
+        graphics_manager_.init(renderer_);
+        modes_map_.emplace(ModeType::GAME, std::make_unique<GameMode>  ( renderer_, event_manager_, graphics_manager_, persistent_state_, oscilloscope_inputs, delta_time_) );
+        modes_map_.emplace(ModeType::MAIN_MENU, std::make_unique<MainMenuMode>( renderer_, event_manager_, graphics_manager_, persistent_state_, delta_time_) );
+    }
+    catch(const std::exception& e)
+    { std::cerr << e.what() << '\n'; }
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 }
 
-App::~App() = default;
+bool App::init()
+{ return Init( window_, renderer_ ); }
 
-void App::run()
+App::~App()
+{ Close( window_, renderer_ ); }
+
+bool App::run_once()
 {
-    while( !event_manager_.check_quit() )
+    bool quit = event_manager_.check_quit();
+    
+    bool cond = !quit;
+    if (cond)
     {
         current_time_ = SDL_GetTicks();
         delta_time_ = (current_time_ - last_time_) / 1000.0f;
         last_time_ = current_time_;
 
         modes_map_.at( persistent_state_.mode )->run();
-        event_manager_.update();
-    } 
+        event_manager_.update();    
+    }
+    return cond;
+}
+
+void App::run()
+{
+    while( this->run_once() )
+    {} 
 }

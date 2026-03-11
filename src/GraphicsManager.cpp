@@ -5,9 +5,10 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-GraphicsManager::GraphicsManager( SDL_Renderer* renderer ) :
-    renderer_{renderer}
+
+void GraphicsManager::init(SDL_Renderer* renderer)
 {
+    renderer_ = renderer;
     for ( const auto& [folder_path, key] : animations_as_path_key_map )
     { 
         std::vector<std::string> paths;
@@ -36,8 +37,8 @@ GraphicsManager::GraphicsManager( SDL_Renderer* renderer ) :
 
     fonts_.emplace( FontKey::MINECRAFT_18, FontManager( "data/fonts/MinecraftBold-nMK1.otf", 18 ) );
     fonts_.emplace( FontKey::MINECRAFT_24, FontManager( "data/fonts/MinecraftBold-nMK1.otf", 24 ) );
-    fonts_.emplace( FontKey::MINECRAFT_36, FontManager( "data/fonts/MinecraftBold-nMK1.otf", 36 ) );   
-}
+    fonts_.emplace( FontKey::MINECRAFT_36, FontManager( "data/fonts/MinecraftBold-nMK1.otf", 36 ) ); 
+}   
 
 Animation GraphicsManager::copy_animation( AnimationKey key ) const
 { return animations_as_map_.at(key); }

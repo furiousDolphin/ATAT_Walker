@@ -8,19 +8,29 @@
 #include "App.hpp"
 
 
-int main( int argc, char* argv[] )
-{
-    SDL_Window*   window   = nullptr;
-    SDL_Renderer* renderer = nullptr;
+// int main( int argc, char* argv[] )
+// {
+//     SDL_Window*   window   = nullptr;
+//     SDL_Renderer* renderer = nullptr;
 
-    if( Init( window, renderer ) )
-    {
-        App app{ window, renderer };
-        app.run();
+//     if( Init( window, renderer ) )
+//     {
+//         App app{ window, renderer };
+//         app.run();
 
-        Close( window, renderer );
-    }
+//         Close( window, renderer );
+//     }
     
 
+//     return 0;
+// }
+
+
+int main( int argc, char* argv[] )
+{
+    OscilloscopeInputs inputs;
+    App app{inputs};
+    app.run();
+    
     return 0;
 }
