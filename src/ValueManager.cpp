@@ -4,6 +4,8 @@
 
 
 ValueManager::ValueManager() :
+    val_{0.0},
+    dirty_{false},
     getter{[this](){return val_;}},
     setter{[this](double new_val){dirty_ = (new_val == val_ ? false : true); val_=new_val;}}
 {

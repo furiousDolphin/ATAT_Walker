@@ -6,6 +6,7 @@
 
 #include "System.hpp"
 #include "ValueManager.hpp"
+#include "App.hpp"
 
 namespace py = pybind11;
 
@@ -65,4 +66,23 @@ PYBIND11_MODULE(module_uno, m)
                "")
           .def_readwrite("getter", &ValueManager::getter)
           .def_readwrite("setter", &ValueManager::setter);
+
+     py::class_<OscilloscopeInputs>(m, "OscilloscopeInputs")
+          .def(py::init<>())
+          .def_readonly("u", &OscilloscopeInputs::u)
+          .def_readonly("y", &OscilloscopeInputs::y);
+
+     py::class_<App>(m, "App")
+          .def(py::init<OscilloscopeInputs&>(), 
+               py::arg("oscilloscope_inputs"))
+          .def("run",
+               &App::run,
+               "")
+          .def("run_once",
+               &App::run_once,
+               "")
+          .def("init",
+               &App::init,
+               "");
+
 }
