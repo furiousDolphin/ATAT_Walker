@@ -13,13 +13,14 @@ GameMode::GameMode(
     EventManager& event_manager, 
     GraphicsManager& graphics_manager, 
     PersistentState& persistent_state,
-    OscilloscopeInputs& oscilloscope_inputs, 
+    OscilloscopeInputs& oscilloscope_inputs,
+    const std::string& base_path, 
     float& dt 
 ) :
     context_{renderer, event_manager, graphics_manager, persistent_state, oscilloscope_inputs, dt},
     buttons_{event_manager, graphics_manager},
     sliders_{event_manager, graphics_manager},
-    at_at_{graphics_manager, dt}
+    at_at_{graphics_manager, dt, base_path}
 {
     this->create_buttons();
     this->create_sliders();
@@ -30,7 +31,8 @@ GameMode::GameMode(
     auto& [os_u, os_y] = context_.oscilloscope_inputs;
     auto& [at_u, at_y] = at_at_.get_speed_inputs();
 
-    os_y.getter = at_y.getter;
+    os_y.getter = [&at_y]() { return at_y.get_val(); };
+    os_u.getter = [&at_u]() { return at_u.get_val(); };
 }
 
 void GameMode::create_buttons()
@@ -63,7 +65,7 @@ void GameMode::create_sliders()
     Range f_r{0.1, 5.0, 1.0};
     Range r_r{0.1, 2.0, 0.8};
     Range zeta_r{0.1, 2.0, 0.8};
-    Range speed_u_r{-50.0, 50.0, 0.0};
+    Range speed_u_r{-5.0, 5.0, 1.0};
 
     //-----------------------------------------
 

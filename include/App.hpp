@@ -23,7 +23,7 @@
 class App
 {
     public:
-        App(OscilloscopeInputs& oscilloscope_inputs);
+        App(OscilloscopeInputs& oscilloscope_inputs, const std::string& base_path);
         ~App();
         
         void run();

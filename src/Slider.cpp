@@ -105,7 +105,7 @@ void Sliders::add(std::unique_ptr<Slider> slider_ptr)
 { sliders_.push_back(std::move(slider_ptr)); }
 
 void Slider::update()
-{  }
+{ this->get_val(); }
 
 void Slider::render() const
 {

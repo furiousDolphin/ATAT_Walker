@@ -8,8 +8,6 @@ build_path = os.path.join(os.getcwd(), 'build')
 if build_path not in sys.path:
     sys.path.append(build_path)
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
 import numpy as np
 from typing import Callable
 from PyQt6.QtWidgets import QApplication
@@ -21,10 +19,11 @@ from scripts.Oscilloscope import Oscilloscope
 #-------------------------------------------------
 
 oscilloscope_inputs: m.OscilloscopeInputs = m.OscilloscopeInputs()
-at_at_app: m.App = m.App(oscilloscope_inputs)
+base_path = os.path.dirname(os.path.abspath(__file__)) + "/"
+at_at_app: m.App = m.App(oscilloscope_inputs, base_path)
 
 scope_app: QApplication = QApplication(sys.argv)
-scope: Oscilloscope = Oscilloscope(oscilloscope_inputs.y.getter) 
+scope: Oscilloscope = Oscilloscope(oscilloscope_inputs.u.getter) 
 scope.show()
 
 running: bool = True

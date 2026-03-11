@@ -6,13 +6,18 @@
 namespace fs = std::filesystem;
 
 
-void GraphicsManager::init(SDL_Renderer* renderer)
+void GraphicsManager::init(SDL_Renderer* renderer, std::string base_path)
 {
     renderer_ = renderer;
+    base_path_ = base_path;
+    fs::path root(base_path_);
+
     for ( const auto& [folder_path, key] : animations_as_path_key_map )
     { 
         std::vector<std::string> paths;
-        for ( const auto& entry : fs::directory_iterator(folder_path) )
+        fs::path full_folder_path = root / folder_path;
+
+        for ( const auto& entry : fs::directory_iterator(full_folder_path) )
         {
             if ( entry.is_regular_file() && entry.path().extension() == ".png" )
             { paths.emplace_back(entry.path().string()); }
@@ -29,15 +34,18 @@ void GraphicsManager::init(SDL_Renderer* renderer)
 
 
     for ( const auto& [folder_path, key] : vectorized_textures_as_path_key_map )
-    { vectorized_textures_as_map_.emplace(key, VectorizedTextures{renderer, folder_path}); }
+    { 
+        fs::path full_folder_path = root / folder_path;
+        vectorized_textures_as_map_.emplace(key, VectorizedTextures{renderer, full_folder_path.string()}); 
+    }
 
     for ( const auto& [file_path, key] : singular_textures_as_path_key_map )
-    { textures_as_map_[key] = Texture{renderer, file_path}; }
+    { textures_as_map_[key] = Texture{renderer, (root / file_path).string()}; }
 
 
-    fonts_.emplace( FontKey::MINECRAFT_18, FontManager( "data/fonts/MinecraftBold-nMK1.otf", 18 ) );
-    fonts_.emplace( FontKey::MINECRAFT_24, FontManager( "data/fonts/MinecraftBold-nMK1.otf", 24 ) );
-    fonts_.emplace( FontKey::MINECRAFT_36, FontManager( "data/fonts/MinecraftBold-nMK1.otf", 36 ) ); 
+    fonts_.emplace( FontKey::MINECRAFT_18, FontManager( (root / "data/fonts/MinecraftBold-nMK1.otf").string(), 18 ) );
+    fonts_.emplace( FontKey::MINECRAFT_24, FontManager( (root / "data/fonts/MinecraftBold-nMK1.otf").string(), 24 ) );
+    fonts_.emplace( FontKey::MINECRAFT_36, FontManager( (root / "data/fonts/MinecraftBold-nMK1.otf").string(), 36 ) ); 
 }   
 
 Animation GraphicsManager::copy_animation( AnimationKey key ) const
@@ -78,7 +86,7 @@ const Texture* GraphicsManager::get_dynamic_texture_ptr(const std::string& file_
 
     try 
     {
-        Texture texture{renderer_, file_path};
+        Texture texture{renderer_, base_path_ + file_path};
         auto [inserted_it, success] =  dynamic_textures_.emplace(file_path, std::move(texture));
         return &(inserted_it->second);
     }

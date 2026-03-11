@@ -38,9 +38,11 @@ namespace fs = std::filesystem;
 
 AT_AT::AT_AT(
     const GraphicsManager& graphics_manager, 
-    const float& dt
+    const float& dt,
+    const std::string& base_path
 ) :
     context_{graphics_manager, dt},
+    params_{base_path},
     kinematics_provider_ptr_{std::make_unique<KinematicsProvider>(params_)},
     speed_inputs_{},
     legs_ptr_{std::make_unique<Legs>(graphics_manager, *(kinematics_provider_ptr_.get()), dt, speed_inputs_, params_)},
@@ -58,9 +60,9 @@ void AT_AT::update()
 void AT_AT::render() const
 { legs_ptr_->render(); }
 
-AT_AT::Params::Params()
+AT_AT::Params::Params(const std::string& base_path)
 { 
-    this->create_data();
+    this->create_data(base_path);
 }
 
 const AT_AT::Params::EllipseParams& AT_AT::Params::get_ellipse_params() const
@@ -68,18 +70,10 @@ const AT_AT::Params::EllipseParams& AT_AT::Params::get_ellipse_params() const
 const AT_AT::Params::LegsParams& AT_AT::Params::get_leg_params() const
 { return legs_; }
 
-void AT_AT::Params::create_data()
+void AT_AT::Params::create_data(const std::string& base_path)
 {
-    char* base_path = SDL_GetBasePath();
-    if (!base_path)
-    { throw std::runtime_error("nie udalo sie pobrac base path w AT_AT::Params::create_data()"); }
-
-    fs::path exe_path{base_path};
-    SDL_free(base_path);
-    fs::path root_path = exe_path.parent_path().parent_path();
-    fs::path file_path = root_path / fs::path{"params.json"};
-
-    std::ifstream file{file_path};
+    fs::path full_file_path{base_path + "/params.json"};
+    std::ifstream file{full_file_path};
     if (!file.is_open())
     { throw std::runtime_error("nie udalo sie otworzyc json w AT_AT::Params::create_data()");}
 

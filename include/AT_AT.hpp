@@ -28,7 +28,8 @@ class AT_AT
     public:
         AT_AT(
             const GraphicsManager& graphics_manager, 
-            const float& dt);
+            const float& dt,
+            const std::string& base_path);
         
         void init();
         void update();
@@ -37,7 +38,7 @@ class AT_AT
         class Params
         {
             public:
-                Params();
+                Params(const std::string& base_path);
 
                 struct EllipseParams
                 {
@@ -59,7 +60,7 @@ class AT_AT
                 const LegsParams& get_leg_params() const;
 
             private:
-                void create_data();
+                void create_data(const std::string& base_path);
 
                 EllipseParams ellipse_;
                 LegsParams legs_;

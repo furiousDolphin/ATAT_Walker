@@ -6,7 +6,7 @@
 #include "GameMode.hpp"
 #include "MainMenuMode.hpp"
 
-App::App(OscilloscopeInputs& oscilloscope_inputs) :
+App::App(OscilloscopeInputs& oscilloscope_inputs, const std::string& base_path) :
     window_{nullptr},
     renderer_{nullptr},
     event_manager_{},
@@ -21,8 +21,8 @@ App::App(OscilloscopeInputs& oscilloscope_inputs) :
 
     try
     {
-        graphics_manager_.init(renderer_);
-        modes_map_.emplace(ModeType::GAME, std::make_unique<GameMode>  ( renderer_, event_manager_, graphics_manager_, persistent_state_, oscilloscope_inputs, delta_time_) );
+        graphics_manager_.init(renderer_, base_path);
+        modes_map_.emplace(ModeType::GAME, std::make_unique<GameMode>  ( renderer_, event_manager_, graphics_manager_, persistent_state_, oscilloscope_inputs, base_path, delta_time_) );
         modes_map_.emplace(ModeType::MAIN_MENU, std::make_unique<MainMenuMode>( renderer_, event_manager_, graphics_manager_, persistent_state_, delta_time_) );
     }
     catch(const std::exception& e)
