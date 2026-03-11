@@ -40,7 +40,9 @@ App::~App()
 bool App::run_once()
 {
     bool quit = event_manager_.check_quit();
-    if (!quit)
+    
+    bool cond = !quit;
+    if (cond)
     {
         current_time_ = SDL_GetTicks();
         delta_time_ = (current_time_ - last_time_) / 1000.0f;
@@ -49,7 +51,7 @@ bool App::run_once()
         modes_map_.at( persistent_state_.mode )->run();
         event_manager_.update();    
     }
-    return !quit;
+    return cond;
 }
 
 void App::run()
