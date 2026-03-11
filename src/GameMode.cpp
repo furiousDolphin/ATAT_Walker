@@ -51,6 +51,8 @@ void GameMode::create_sliders()
     auto& [zeta, r, f] = at_at_.get_sys_inputs();
     const auto& graphics_manager = context_.graphics_manager;
 
+    //-----------------------------------------   z tego trzeba zrobic json'a aby latwo testowac
+
     struct Range
     {
         double min_v;
@@ -62,6 +64,8 @@ void GameMode::create_sliders()
     Range r_r{0.1, 2.0, 0.8};
     Range zeta_r{0.1, 2.0, 0.8};
     Range speed_u_r{-50.0, 50.0, 0.0};
+
+    //-----------------------------------------
 
     sliders_.add(std::make_unique<Slider>(
         Vector2D<int>{WIDTH-1*w-1*margin, margin}, 

@@ -90,6 +90,7 @@ Rect* Slider::get_colliding_rect_ptr(Vector2D<int> p)
         if ( button_rect_ptr_->collide_point(p) )
         { return button_rect_ptr_.get(); }
     }
+    return nullptr;
 }
 
 
