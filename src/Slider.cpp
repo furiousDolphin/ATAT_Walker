@@ -72,9 +72,6 @@ Slider::Slider(
     bot_pos_ = top_pos_ + Vector2D<int>{0, (h - w)};
     cur_pos_.x = platform_rect_.get_centerx();
     cur_pos_.y = bot_pos_.y + (top_pos_.y - bot_pos_.y)*((params_.cur_val - min_val)/(max_val - min_val));
-    std::cout << "top: "<< top_pos_.y << "\n";
-    std::cout << "bot: "<< bot_pos_.y << "\n";
-    std::cout << "cur: "<< cur_pos_.y << "\n";
 
     button_rect_ptr_ = std::make_unique<SlideRect>(
         Vector2D<int>{}, 
@@ -95,17 +92,19 @@ Rect* Slider::get_colliding_rect_ptr(Vector2D<int> p)
     }
 }
 
-double Slider::get_val() const
+
+
+void Slider::get_val()
 { 
     const auto& [min_val, max_val, cur_val] = params_;
-    return min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y)); 
+    fun_(min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y)));
 }
 
 void Sliders::add(std::unique_ptr<Slider> slider_ptr)
 { sliders_.push_back(std::move(slider_ptr)); }
 
 void Slider::update()
-{}
+{  }
 
 void Slider::render() const
 {
@@ -115,8 +114,6 @@ void Slider::render() const
     { 
         auto [x, y] = button_rect_ptr_->get_pos();
         button_texture_ptr->render(x, y); 
-        //std::cout << x << " : " << y <<"\n";
-        //std::cout << "rendersie wykonuje\n";
     }
 }
 
@@ -129,10 +126,17 @@ Sliders::Sliders(
 
 }
 
+void Sliders::init()
+{
+    for ( auto& slider : sliders_ )
+    { slider->update(); }
+}
+
 void Sliders::update()
 {
     const EventManager& event_manager = context_.event_manager;
     Vector2D<int> mouse_pos = event_manager.mouse_pos();
+
 
     if (grabbed_)
     {
@@ -143,7 +147,10 @@ void Sliders::update()
             grabbed_.clear();
         }
         else if ( event_manager.left_is_clicked() && event_manager.mouse_motion() )
-        { grabbed_.update(mouse_pos); }
+        { 
+            grabbed_.update(mouse_pos);
+            (*grabbed_).get_val();
+        }
     }
 
     else
