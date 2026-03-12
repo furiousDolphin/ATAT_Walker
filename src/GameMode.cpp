@@ -36,7 +36,7 @@ void GameMode::create_sliders()
     int w = 100;
     int margin = 20;
     const auto& graphics_manager = context_.graphics_manager;
-    //sliders_.add(std::make_unique<Slider>(Vector2D<int>{WIDTH-1*w-1*margin, margin}, graphics_manager, 0, 100, 50, [this](double val){std::cout<<val<<"\n";}));
+    sliders_.add(std::make_unique<Slider>(Vector2D<int>{WIDTH-1*w-1*margin, margin}, graphics_manager, 0, 100, 50, [this](double val){std::cout<<val<<"\n";}));
     //sliders_.add(std::make_unique<Slider>(Vector2D<int>{WIDTH-2*w-2*margin, margin}, graphics_manager, 0, 100, 50, [this](double val){std::cout<<val<<"\n";}));
     //sliders_.add(std::make_unique<Slider>(Vector2D<int>{WIDTH-3*w-3*margin, margin}, graphics_manager, 0, 100, 50, [this](double val){std::cout<<val<<"\n";}));
     //sliders_.add(std::make_unique<Slider>(Vector2D<int>{WIDTH-4*w-4*margin, margin}, graphics_manager, 0, 100, 50, [this](double val){std::cout<<val<<"\n";}));
