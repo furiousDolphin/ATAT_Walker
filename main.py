@@ -24,12 +24,13 @@ base_path = os.path.dirname(os.path.abspath(__file__)) + "/"
 at_at_app: m.App = m.App(oscilloscope_inputs, base_path)
 
 scope_app: QApplication = QApplication(sys.argv)
-scope: Oscilloscope = Oscilloscope(oscilloscope_inputs.u.getter) 
+scope: Oscilloscope = Oscilloscope(oscilloscope_inputs.y.getter) 
 scope.show()
 
 running: bool = True
 
 while running:
+
     running = at_at_app.run_once()
     scope.update()
     scope_app.processEvents()

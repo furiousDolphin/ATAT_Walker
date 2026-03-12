@@ -33,6 +33,7 @@ GameMode::GameMode(
 
     os_y.link_to(at_y);
     os_u.link_to(at_u);
+    std::cout << "DEBUG: Linkuje os_y pod adres: " << &at_y << std::endl;
 }
 
 void GameMode::create_buttons()
@@ -73,7 +74,7 @@ void GameMode::create_sliders()
         Vector2D<int>{WIDTH-1*w-1*margin, margin}, 
         graphics_manager, speed_u_r.min_v, speed_u_r.max_v, speed_u_r.init_v, 
         [this, &os_u, &at_u](double val)
-        {os_u.set_val(val); at_u.set_val(val);}));
+        { at_u.set_val(val);}));
     sliders_.add(std::make_unique<Slider>(
         Vector2D<int>{WIDTH-2*w-2*margin, margin}, 
         graphics_manager, zeta_r.min_v, zeta_r.max_v, zeta_r.init_v, 

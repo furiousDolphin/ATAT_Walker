@@ -68,8 +68,8 @@ class AT_AT
 
         struct SpeedInputs
         {
-            ValueManager y;
             ValueManager u;
+            ValueManager y;
         };
 
         SpeedInputs& get_speed_inputs();

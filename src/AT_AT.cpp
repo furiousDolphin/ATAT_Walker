@@ -57,8 +57,8 @@ void AT_AT::init()
 void AT_AT::update()
 { 
     //legs_ptr_->update();
-    // auto [t, y] = sos_.do_RK4_step(context_.dt);
-    // speed_inputs_.y.set_val(y);
+    auto [t, y] = sos_.do_RK4_step(context_.dt);
+    speed_inputs_.y.set_val(y);
 }
 
 void AT_AT::render() const
