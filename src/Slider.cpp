@@ -98,7 +98,8 @@ Rect* Slider::get_colliding_rect_ptr(Vector2D<int> p)
 void Slider::get_val()
 { 
     const auto& [min_val, max_val, cur_val] = params_;
-    fun_(min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y)));
+    double res = min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y));
+    fun_(res);
 }
 
 void Sliders::add(std::unique_ptr<Slider> slider_ptr)
@@ -164,7 +165,10 @@ void Sliders::update()
             {
                 slider_ptr->marked_ = true;
                 if (event_manager.left_got_clicked())
-                { grabbed_.set_new(slider_ptr.get(), grabbed_rect_ptr, mouse_pos ); }
+                { 
+                    grabbed_.set_new(slider_ptr.get(), grabbed_rect_ptr, mouse_pos );
+                    (*grabbed_).get_val();
+                }
                 break;
             }
             else

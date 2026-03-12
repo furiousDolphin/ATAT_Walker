@@ -30,6 +30,7 @@ running: bool = True
 
 while running:
     running = at_at_app.run_once()
+    print(oscilloscope_inputs.u.get_val())
     scope.update()
     scope_app.processEvents()
 
