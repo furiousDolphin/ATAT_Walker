@@ -20,6 +20,7 @@ from scripts.Oscilloscope import Oscilloscope
 
 oscilloscope_inputs: m.OscilloscopeInputs = m.OscilloscopeInputs()
 base_path = os.path.dirname(os.path.abspath(__file__)) + "/"
+
 at_at_app: m.App = m.App(oscilloscope_inputs, base_path)
 
 scope_app: QApplication = QApplication(sys.argv)
@@ -30,10 +31,8 @@ running: bool = True
 
 while running:
     running = at_at_app.run_once()
-    print(oscilloscope_inputs.u.get_val())
     scope.update()
     scope_app.processEvents()
-
 sys.exit(0)
 
 #-------------------------------------------------

@@ -31,6 +31,7 @@ App::App(OscilloscopeInputs& oscilloscope_inputs, const std::string& base_path) 
 
 }
 
+
 bool App::init()
 { return Init( window_, renderer_ ); }
 

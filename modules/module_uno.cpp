@@ -79,7 +79,11 @@ PYBIND11_MODULE(module_uno, m)
                [](ValueManager &self, std::function<void(double)> f) {
                     self.setter = f;
                }
-          );
+          )
+          .def("link_to",
+               &ValueManager::link_to,
+               "",
+               py::arg("other"));
 
      py::class_<OscilloscopeInputs>(m, "OscilloscopeInputs")
           .def(py::init<>())

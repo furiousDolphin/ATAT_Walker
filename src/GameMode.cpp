@@ -28,12 +28,11 @@ GameMode::GameMode(
     sliders_.init();
     at_at_.init();
 
-    // auto& [os_u, os_y] = context_.oscilloscope_inputs;
-    // auto& [at_u, at_y] = at_at_.get_speed_inputs();
+    auto& [os_u, os_y] = context_.oscilloscope_inputs;
+    auto& [at_u, at_y] = at_at_.get_speed_inputs();
 
-    // os_y.link_to(at_y);
-    // os_u.link_to(at_u);
-
+    os_y.link_to(at_y);
+    os_u.link_to(at_u);
 }
 
 void GameMode::create_buttons()
@@ -105,6 +104,7 @@ void GameMode::update()
 
     buttons_.update();
     sliders_.update();
+    at_at_.update();
 }
 
 void GameMode::render()

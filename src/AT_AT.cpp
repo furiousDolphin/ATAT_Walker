@@ -55,7 +55,11 @@ void AT_AT::init()
 { sos_.set_forcing_func(speed_inputs_.u.getter); }
 
 void AT_AT::update()
-{ legs_ptr_->update(); }
+{ 
+    //legs_ptr_->update();
+    // auto [t, y] = sos_.do_RK4_step(context_.dt);
+    // speed_inputs_.y.set_val(y);
+}
 
 void AT_AT::render() const
 { legs_ptr_->render(); }
