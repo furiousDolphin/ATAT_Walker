@@ -98,7 +98,7 @@ Rect* Slider::get_colliding_rect_ptr(Vector2D<int> p)
 void Slider::get_val()
 { 
     const auto& [min_val, max_val, cur_val] = params_;
-    double res = min_val + (max_val-min_val) * ((cur_pos_.y - bot_pos_.y)/(top_pos_.y - bot_pos_.y));
+    double res = min_val + (max_val-min_val) * (static_cast<double>(cur_pos_.y - bot_pos_.y)/static_cast<double>(top_pos_.y - bot_pos_.y));
     fun_(res);
 }
 
