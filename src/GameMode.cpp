@@ -13,13 +13,14 @@ GameMode::GameMode(
     EventManager& event_manager, 
     GraphicsManager& graphics_manager, 
     PersistentState& persistent_state,
-    OscilloscopeInputs& oscilloscope_inputs, 
+    OscilloscopeInputs& oscilloscope_inputs,
+    const std::string& base_path, 
     float& dt 
 ) :
     context_{renderer, event_manager, graphics_manager, persistent_state, oscilloscope_inputs, dt},
     buttons_{event_manager, graphics_manager},
     sliders_{event_manager, graphics_manager},
-    at_at_{graphics_manager, dt}
+    at_at_{graphics_manager, dt, base_path}
 {
     this->create_buttons();
     this->create_sliders();
@@ -30,7 +31,8 @@ GameMode::GameMode(
     auto& [os_u, os_y] = context_.oscilloscope_inputs;
     auto& [at_u, at_y] = at_at_.get_speed_inputs();
 
-    os_y.getter = at_y.getter;
+    os_y.link_to(at_y);
+    os_u.link_to(at_u);
 }
 
 void GameMode::create_buttons()
@@ -63,7 +65,7 @@ void GameMode::create_sliders()
     Range f_r{0.1, 5.0, 1.0};
     Range r_r{0.1, 2.0, 0.8};
     Range zeta_r{0.1, 2.0, 0.8};
-    Range speed_u_r{-50.0, 50.0, 0.0};
+    Range speed_u_r{-30.0, 30.0, 0.0};
 
     //-----------------------------------------
 
@@ -71,7 +73,7 @@ void GameMode::create_sliders()
         Vector2D<int>{WIDTH-1*w-1*margin, margin}, 
         graphics_manager, speed_u_r.min_v, speed_u_r.max_v, speed_u_r.init_v, 
         [this, &os_u, &at_u](double val)
-        {os_u.set_val(val); at_u.set_val(val);}));
+        { at_u.set_val(val);}));
     sliders_.add(std::make_unique<Slider>(
         Vector2D<int>{WIDTH-2*w-2*margin, margin}, 
         graphics_manager, zeta_r.min_v, zeta_r.max_v, zeta_r.init_v, 
@@ -102,6 +104,7 @@ void GameMode::update()
 
     buttons_.update();
     sliders_.update();
+    at_at_.update();
 }
 
 void GameMode::render()
@@ -112,6 +115,9 @@ void GameMode::render()
 
     buttons_.render();
     sliders_.render();
+    at_at_.render();
+
+
     
     SDL_RenderPresent( renderer );
 }

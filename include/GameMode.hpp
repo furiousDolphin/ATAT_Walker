@@ -30,6 +30,7 @@ class GameMode : public Mode
             GraphicsManager& graphics_manager, 
             PersistentState& persistent_state,
             OscilloscopeInputs& oscilloscope_inputs, 
+            const std::string& base_path,
             float& dt );
 
         void run() override;

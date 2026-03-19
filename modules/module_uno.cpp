@@ -6,6 +6,7 @@
 
 #include "System.hpp"
 #include "ValueManager.hpp"
+#include "App.hpp"
 
 namespace py = pybind11;
 
@@ -63,6 +64,44 @@ PYBIND11_MODULE(module_uno, m)
           .def("check_and_reset_dirty",
                &ValueManager::check_and_reset_dirty,
                "")
-          .def_readwrite("getter", &ValueManager::getter)
-          .def_readwrite("setter", &ValueManager::setter);
+          .def_property("getter", 
+               [](ValueManager &self) {
+                    return std::function<double()>(std::bind(&ValueManager::get_val, &self));
+               },
+               [](ValueManager &self, std::function<double()> f) {
+                    self.getter = f; 
+               }
+          )
+          .def_property("setter", 
+               [](ValueManager &self) {
+                    return std::function<void(double)>(std::bind(&ValueManager::set_val, &self, std::placeholders::_1));
+               },
+               [](ValueManager &self, std::function<void(double)> f) {
+                    self.setter = f;
+               }
+          )
+          .def("link_to",
+               &ValueManager::link_to,
+               "",
+               py::arg("other"));
+
+     py::class_<OscilloscopeInputs>(m, "OscilloscopeInputs")
+          .def(py::init<>())
+          .def_readonly("u", &OscilloscopeInputs::u)
+          .def_readonly("y", &OscilloscopeInputs::y);
+
+     py::class_<App>(m, "App")
+          .def(py::init<OscilloscopeInputs&, std::string>(), 
+               py::arg("oscilloscope_inputs"),
+               py::arg("base_path"))
+          .def("run",
+               &App::run,
+               "")
+          .def("run_once",
+               &App::run_once,
+               "")
+          .def("init",
+               &App::init,
+               "");
+
 }
