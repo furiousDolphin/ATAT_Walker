@@ -56,7 +56,7 @@ void AT_AT::init()
 
 void AT_AT::update()
 { 
-    //legs_ptr_->update();
+    legs_ptr_->update();
     auto [t, y] = sos_.do_RK4_step(context_.dt);
     speed_inputs_.y.set_val(y);
 }
@@ -102,7 +102,7 @@ void AT_AT::Params::create_data(const std::string& base_path)
     ellipse_.N = j_ellipse.value("N", 1440);
 
     auto& j_leg = j["leg"];
-    legs_.phi_zero = j_leg.value("phi_zero", 80.0);
+    legs_.phi_zero = to_radians(j_leg.value("phi_zero", 80.0));
     legs_.h = j_leg.value("h", 375.0);
     legs_.k = j_leg.value("k", 220.0);
 
@@ -129,7 +129,7 @@ SecondOrderSystem::Params& AT_AT::get_sys_inputs()
 KinematicsProvider::KinematicsProvider(const AT_AT::Params& params) :
     context_{params}
 {
-
+    this->create_ellipse_data();
 }
 
 double KinematicsProvider::find_phi_for_x(double x) const
@@ -159,10 +159,15 @@ double KinematicsProvider::find_arc_len_for_x(double x) const
     //B = total_arc_len/2 & A = (-1)*total_arc_len/(2*e_a)
 
     const auto& [e_a, e_b, N] = context_.params.get_ellipse_params();
-    if (std::abs(x) >= e_a )
-    { throw std::runtime_error("podany x nie nalezy do przedzialu [-e_a, e_a]"); }
+    if (std::abs(x) > e_a )
+    {   
+        std::cerr << "x: " << x << "\n";
+        throw std::runtime_error("podany x nie nalezy do przedzialu [-e_a, e_a]"); 
+    }
     double A = (-1.0)*total_arc_len_/(2*e_a);
     double B = total_arc_len_/2;
+    //std::cerr << "total_arc_len: " << total_arc_len_ << "\n";
+    //std::cerr << "A*x + B: " << A*x+B << "\n";
     return A*x+B;
 }
 
@@ -172,6 +177,8 @@ double KinematicsProvider::find_arc_len_for_theta(double theta) const
     auto integrand = [&](double t) 
     { return std::sqrt( std::pow(e_a*std::sin(t), 2) + 
                         std::pow(e_b*std::cos(t), 2) ); };
+
+    //std::cerr << "theta:" << theta << "\n";
 
     boost::math::quadrature::gauss_kronrod<double, 61> integrator;
 
@@ -214,6 +221,10 @@ void KinematicsProvider::create_ellipse_data()
 
 Leg::Geometry KinematicsProvider::compute_movement_params(double x, Leg::Type leg_type, Leg::Phase leg_phase) const
 {
+    Leg::Geometry leg_geometry;
+    auto& [v1, v2, v3, v4] = leg_geometry.vectors;
+    auto& [angle1, angle2, angle3] = leg_geometry.angles;
+
     double gx, gy;
 
     double sin1, cos1;
@@ -238,8 +249,20 @@ Leg::Geometry KinematicsProvider::compute_movement_params(double x, Leg::Type le
     cos3 = std::cos(phi);
     sin3 = std::sin(phi);
 
-    gx = ex + l3*cos3 + k;
-    gy = ey + l3*sin3 - h;
+    switch (leg_phase)
+    {
+        case Leg::Phase::STEP:
+            v1 = { ex + k, ey };
+            break;
+        case Leg::Phase::STROKE:
+            v1 = { x + k, 0.0 };
+            break;
+        default:
+            throw std::runtime_error("podano nieobslugiwany enum w compute_movement_params");
+    }
+
+    gx = v1.x + l3*cos3;
+    gy = v1.y + l3*sin3 - h;
 
     A = gx;
     B = gy;
@@ -264,24 +287,8 @@ Leg::Geometry KinematicsProvider::compute_movement_params(double x, Leg::Type le
     cos2 = ( -gx - l1*cos1 ) / l2;
     sin2 = ( -gy - l1*sin1) / l2;
 
-    Leg::Geometry leg_geometry;
-    auto [v1, v2, v3, v4] = leg_geometry.vectors;
-    auto [angle1, angle2, angle3] = leg_geometry.angles;
-
-    switch (leg_phase)
-    {
-        case Leg::Phase::STROKE:
-            v1 = { ex + k, ey };
-            break;
-        case Leg::Phase::STEP:
-            v1 = { x + k, 0.0 };
-            break;
-        default:
-            throw std::runtime_error("podano nieobslugiwany enum w compute_movement_params");
-    }
-
-    v2 = { l3*cos3 + v1.x, l3*sin3 + v1.x};
-    v3 = { l1*cos1 + v2.x, l1*sin1 + v2.x};
+    v2 = { l3*cos3 + v1.x, l3*sin3 + v1.y};
+    v3 = { l1*cos1 + v2.x, l1*sin1 + v2.y};
     v4 = { l2*cos2 + v3.x, l2*sin2 + v3.y};
 
     v1.y = -v1.y + static_cast<double>(HEIGHT);
@@ -293,7 +300,22 @@ Leg::Geometry KinematicsProvider::compute_movement_params(double x, Leg::Type le
     angle2 = -std::atan2( sin1, cos1 );
     angle3 = -std::atan2( sin2, cos2 );
 
-    return Leg::Geometry{{v1, v2, v3, v4}, {angle1, angle2, angle3}};
+    std::cerr << std::fixed << std::setprecision(2); // Ustalamy 2 miejsca po przecinku
+    std::cerr << "================ LEG GEOMETRY ================\n";
+    std::cerr << "x:" << x << "\n";
+    std::cerr << "VECTORS:\n";
+    std::cerr << "  v1: [" << std::setw(8) << v1.x << ", " << std::setw(8) << v1.y << "]\n";
+    std::cerr << "  v2: [" << std::setw(8) << v2.x << ", " << std::setw(8) << v2.y << "]\n";
+    std::cerr << "  v3: [" << std::setw(8) << v3.x << ", " << std::setw(8) << v3.y << "]\n";
+    std::cerr << "  v4: [" << std::setw(8) << v4.x << ", " << std::setw(8) << v4.y << "]\n";
+
+    std::cerr << "ANGLES (rad):\n";
+    std::cerr << "  a1: " << std::setw(8) << angle1 
+            << " | a2: " << std::setw(8) << angle2 
+            << " | a3: " << std::setw(8) << angle3 << "\n";
+    std::cerr << "----------------------------------------------" << std::endl;
+
+    return leg_geometry;
 }
 
 Leg::Leg(
@@ -323,27 +345,27 @@ void Leg::update(
     { x_ = 0;}
     else if( (x_ < 3.0*e_a && x_ > 1.0*e_a) )
     {
-        kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, type_, STEP );
+        geometry_ = kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, type_, STEP );
         velocity_ = 3*speed;
     }
     else if( (x_ > -3.0*e_a && x_ < -1.0*e_a) )
     {
-        kinematics_provider.compute_movement_params( -x_ + 2.0*e_a, type_, STEP );
+        geometry_ = kinematics_provider.compute_movement_params( -x_ - 2.0*e_a, type_, STEP );
         velocity_ = 3*speed;
     }
     else if( x_ >= -1.0*e_a && x_ <= 1.0*e_a)
     {
-        kinematics_provider.compute_movement_params( x_, type_, STROKE );
+        geometry_ = kinematics_provider.compute_movement_params( x_, type_, STROKE );
         velocity_ = speed;
     }
     else if( x_ > 3.0*e_a )
     {
-        kinematics_provider.compute_movement_params( x_ - 4.0*e_a, type_, STROKE );
+        geometry_ = kinematics_provider.compute_movement_params( x_ - 4.0*e_a, type_, STROKE );
         velocity_ = speed;
     }
     else if( x_ < -3.0*e_a )
     {
-        kinematics_provider.compute_movement_params( x_ - 4.0*e_a, type_, STROKE );
+        geometry_ = kinematics_provider.compute_movement_params( x_ + 4.0*e_a, type_, STROKE );
         velocity_ = speed;
     }
 
@@ -356,8 +378,8 @@ void Leg::render(const GraphicsManager& graphics_manager, const AT_AT::Params& p
     std::array<GraphicsManager::SingularTextureKey, N> keys
     {
         GraphicsManager::ATAT_LEG_SEGMENT_1,
-        GraphicsManager::ATAT_LEG_SEGMENT_2,
-        GraphicsManager::ATAT_LEG_SEGMENT_3
+        GraphicsManager::ATAT_LEG_SEGMENT_1,
+        GraphicsManager::ATAT_LEG_SEGMENT_1
     };
 
     const auto& legs_params = params.get_leg_params();
@@ -368,7 +390,9 @@ void Leg::render(const GraphicsManager& graphics_manager, const AT_AT::Params& p
     {
         const Texture& texture = graphics_manager.get_texture(keys[idx]);
         auto pos = static_cast<Vector2D<int>>(geometry_.vectors[idx]-double_axis+pos_);
-        texture.render(pos, nullptr, geometry_.angles[idx], &sdl_axis, SDL_FLIP_NONE);
+
+        //texture.render(pos);
+        texture.render(pos, nullptr, to_degrees(geometry_.angles[idx]), &sdl_axis, SDL_FLIP_NONE);
     }
 }
 
@@ -382,10 +406,10 @@ Legs::Legs(
     context_{graphics_manager, kinematics_provider, dt, speed_inputs, params},
     legs_
     {
-        Leg{params, -1.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 + 100, 0 }, Leg::Type::FRONT_LEFT},
-        Leg{params, -1.0/3.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 - 100, 0 }, Leg::Type::BACK_LEFT},
-        Leg{params, 1.0/3.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 + 100, 0 }, Leg::Type::FRONT_RIGHT},
-        Leg{params, 1.0 * params.get_ellipse_params().a, { WIDTH/2 - 200 - 100, 0 }, Leg::Type::BACK_RIGHT}         
+        Leg{params, -1.0 * params.get_ellipse_params().a, { WIDTH/2, 0 }, Leg::Type::FRONT_LEFT},
+        Leg{params, -1.0/3.0 * params.get_ellipse_params().a, { WIDTH/2, 0 }, Leg::Type::BACK_LEFT},
+        Leg{params, 1.0/3.0 * params.get_ellipse_params().a, { WIDTH/2, 0 }, Leg::Type::FRONT_RIGHT},
+        Leg{params, 1.0 * params.get_ellipse_params().a, { WIDTH/2, 0 }, Leg::Type::BACK_RIGHT}         
     }
 {
     

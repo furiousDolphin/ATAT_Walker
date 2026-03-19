@@ -37,7 +37,7 @@ class Oscilloscope(QMainWindow):
         self.setCentralWidget(self.win)
 
         self.plot = self.win.addPlot(title="title2")
-        self.plot.setYRange(-10.0, 10.0)
+        self.plot.setYRange(-40.0, 40.0)
         self.plot.addLegend()
         self.plot.showGrid(x=True, y=True)
 

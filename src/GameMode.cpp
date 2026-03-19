@@ -33,7 +33,6 @@ GameMode::GameMode(
 
     os_y.link_to(at_y);
     os_u.link_to(at_u);
-    std::cout << "DEBUG: Linkuje os_y pod adres: " << &at_y << std::endl;
 }
 
 void GameMode::create_buttons()
@@ -66,7 +65,7 @@ void GameMode::create_sliders()
     Range f_r{0.1, 5.0, 1.0};
     Range r_r{0.1, 2.0, 0.8};
     Range zeta_r{0.1, 2.0, 0.8};
-    Range speed_u_r{-5.0, 5.0, 1.0};
+    Range speed_u_r{-30.0, 30.0, 0.0};
 
     //-----------------------------------------
 
@@ -116,6 +115,9 @@ void GameMode::render()
 
     buttons_.render();
     sliders_.render();
+    at_at_.render();
+
+
     
     SDL_RenderPresent( renderer );
 }

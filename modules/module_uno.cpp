@@ -69,7 +69,7 @@ PYBIND11_MODULE(module_uno, m)
                     return std::function<double()>(std::bind(&ValueManager::get_val, &self));
                },
                [](ValueManager &self, std::function<double()> f) {
-                    self.getter = f; // Pozwala przypisać nową lambdę z C++ lub Pythona
+                    self.getter = f; 
                }
           )
           .def_property("setter", 
