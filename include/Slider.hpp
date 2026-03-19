@@ -41,7 +41,7 @@ class Slider
             double init_val, 
             std::function< void(double) > fun);
 
-        double get_val() const;
+        void get_val();
     
         void update();
         void render() const;
@@ -109,6 +109,7 @@ class Sliders
             const GraphicsManager& graphics_manager);
 
         void add(std::unique_ptr<Slider> slider_ptr);
+        void init();
         void update();
         void render() const;
      

@@ -71,25 +71,23 @@ target_link_libraries(base_module_library INTERFACE
 
 target_compile_definitions(base_module_library INTERFACE WITHOUT_NUMPY SDL_MAIN_HANDLED)
 
-
-add_executable(ATAT_WalkerApp 
-  main.cpp 
-  src/SDL_Management.cpp
-  src/App.cpp
-  src/EventManager.cpp
-  src/GraphicsManager.cpp
-  src/GameMode.cpp
-  src/Button.cpp
-  src/PersistentState.cpp
-  src/MainMenuMode.cpp
-  src/FileManagement.cpp
-  src/Animation.cpp
-  src/Slider.cpp
-  src/AT_AT.cpp
-  src/ChebFunc.cpp )
-target_link_libraries(ATAT_WalkerApp PRIVATE base_module_library)
-
-set_target_properties(ATAT_WalkerApp PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE") #./build/ATAT_WalkerApp.exe
+pybind11_add_module(module_uno 
+    modules/module_uno.cpp
+    src/SDL_Management.cpp
+    src/App.cpp
+    src/EventManager.cpp
+    src/GraphicsManager.cpp
+    src/GameMode.cpp
+    src/Button.cpp
+    src/PersistentState.cpp
+    src/MainMenuMode.cpp
+    src/FileManagement.cpp
+    src/Animation.cpp
+    src/Slider.cpp
+    src/AT_AT.cpp
+    src/ChebFunc.cpp
+    src/ValueManager.cpp
+    src/System.cpp)
 
 set(SDL2_DLLS
     "${SDL2_PATH}/lib/x64/SDL2.dll"
@@ -99,24 +97,15 @@ set(SDL2_DLLS
 )
 
 foreach(dll ${SDL2_DLLS})
-    add_custom_command(TARGET ATAT_WalkerApp POST_BUILD
+    add_custom_command(TARGET module_uno POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${dll}"
-        $<TARGET_FILE_DIR:ATAT_WalkerApp>
+        $<TARGET_FILE_DIR:module_uno>
         COMMENT "Kopiowanie ${dll} do folderu build..."
     )
 endforeach()
 
+target_link_libraries(module_uno PRIVATE base_module_library)
 
-#---------------------------------------------------------
 
-# pybind11_add_module(module_uno modules/module_uno.cpp src/MatrixBuilders.cpp)
-# target_link_libraries(module_uno PRIVATE base_module_library)
-
-# #---------------------------------------------------------
-
-# pybind11_add_module(module_dos modules/module_dos.cpp src/WaveEquation.cpp src/MatrixBuilders.cpp) 
-# target_link_libraries(module_dos PRIVATE base_module_library)
-
-#---------------------------------------------------------
 

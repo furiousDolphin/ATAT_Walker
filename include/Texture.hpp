@@ -121,20 +121,20 @@ class Texture
 
         bool load_file(const std::string& path) 
         {
-            char* base_path = SDL_GetBasePath();
+            // char* base_path = SDL_GetBasePath();
 
-            if( !base_path )
-                throw std::invalid_argument( "nie wyszlo z base_path" );
+            // if( !base_path )
+            //     throw std::invalid_argument( "nie wyszlo z base_path" );
 
-            
-            
-            fs::path exe_path(base_path);
-            SDL_free(base_path);
-            fs::path project_root = exe_path.parent_path().parent_path();
-            fs::path file_path = project_root / path;
+            // fs::path exe_path(base_path);
+            // SDL_free(base_path);
+            // fs::path project_root = exe_path.parent_path().parent_path();
+            // fs::path file_path = project_root / path;
 
 
-            SDL_Surface* surface = IMG_Load(file_path.string().c_str());
+            //SDL_Surface* surface = IMG_Load(file_path.string().c_str());
+
+            SDL_Surface* surface = IMG_Load(path.c_str());
 
             if( surface == nullptr ) 
             {

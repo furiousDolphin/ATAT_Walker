@@ -1,9 +1,13 @@
 #ifndef AT_AT_HPP_
 #define AT_AT_HPP_
 
+#include <Eigen/Dense>
+
 #include "Vector2D.hpp"
 #include "FileManagement.hpp"
 #include "GraphicsManager.hpp"
+#include "System.hpp"
+#include "ValueManager.hpp"
 #include "Settings.hpp"
 
 inline constexpr double PI = 3.14159265358979323846;
@@ -22,16 +26,19 @@ class Legs;
 class AT_AT
 {
     public:
-        AT_AT(const GraphicsManager& graphics_manager, const float& dt);
+        AT_AT(
+            const GraphicsManager& graphics_manager, 
+            const float& dt,
+            const std::string& base_path);
         
+        void init();
         void update();
         void render() const;
-        void set_speed( double speed );
 
         class Params
         {
             public:
-                Params();
+                Params(const std::string& base_path);
 
                 struct EllipseParams
                 {
@@ -53,11 +60,20 @@ class AT_AT
                 const LegsParams& get_leg_params() const;
 
             private:
-                void create_data();
+                void create_data(const std::string& base_path);
 
                 EllipseParams ellipse_;
                 LegsParams legs_;
         };
+
+        struct SpeedInputs
+        {
+            ValueManager u;
+            ValueManager y;
+        };
+
+        SpeedInputs& get_speed_inputs();
+        SecondOrderSystem::Params& get_sys_inputs();
 
     private:
         struct Context
@@ -67,9 +83,12 @@ class AT_AT
         } context_;
 
         Params params_;
+        SecondOrderSystem sos_;
+        SpeedInputs speed_inputs_;
+
         std::unique_ptr<KinematicsProvider> kinematics_provider_ptr_;
-        std::unique_ptr<Legs> legs_ptr_; 
-        double speed_;     
+        std::unique_ptr<Legs> legs_ptr_;   
+        
 };
 
 
@@ -79,9 +98,12 @@ class Leg
     public:
         enum Type;
         Leg(const AT_AT::Params& params, double x_init, Vector2D<double> pos, Type type);
-        void update(const KinematicsProvider& kinematics_provider, const AT_AT::Params& params, float dt);
+        void update(
+            const KinematicsProvider& kinematics_provider, 
+            const AT_AT::Params& params, 
+            float dt, 
+            const AT_AT::SpeedInputs& speed_inputs);
         void render(const GraphicsManager& graphics_manager, const AT_AT::Params& params) const;
-        void set_speed(double speed);
 
         enum Type 
         { 
@@ -110,7 +132,6 @@ class Leg
         double x_;
         double distance_;
         double velocity_;
-        double speed_;
         Vector2D<double> pos_;
 };
 
@@ -142,6 +163,7 @@ class Legs
             const GraphicsManager& graphics_manager, 
             const KinematicsProvider& kinematics_provider, 
             const float& dt,
+            const AT_AT::SpeedInputs& speed_inputs,
             const AT_AT::Params& params);
         void update();
         void render() const;
@@ -152,6 +174,7 @@ class Legs
             const GraphicsManager& graphics_manager;
             const KinematicsProvider& kinematics_provider;
             const float& dt;
+            const AT_AT::SpeedInputs& speed_inputs;
             const AT_AT::Params& params;
         } context_;
 

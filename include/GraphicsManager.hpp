@@ -27,8 +27,9 @@
 class GraphicsManager
 {
     public:
-        GraphicsManager( SDL_Renderer* renderer );
-        ~GraphicsManager() = default;
+        GraphicsManager() = default;
+        void init(SDL_Renderer* renderer, std::string base_path);
+
 
         enum VectorizedTextureKey
         {
@@ -127,6 +128,7 @@ class GraphicsManager
 
         SDL_Renderer* renderer_;
         std::unordered_map<FontKey, FontManager> fonts_;
+        std::string base_path_;
 
         template <typename KeyMap, typename StorageMap>
         auto get_ptr_by_path(const std::string& path, const KeyMap& key_map, const StorageMap& storage_map) const 

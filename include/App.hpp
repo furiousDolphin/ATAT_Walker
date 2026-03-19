@@ -17,23 +17,24 @@
 #include "SDL_Management.hpp"
 #include "Mode.hpp"
 #include "PersistentState.hpp"
-
+#include "ValueManager.hpp"
 
 
 class App
 {
     public:
-        App( SDL_Window* window, SDL_Renderer* renderer );
+        App(OscilloscopeInputs& oscilloscope_inputs, const std::string& base_path);
         ~App();
         
         void run();
+        bool run_once();
+        bool init();
 
     private:
-        SDL_Window*     window_;
-        SDL_Renderer*   renderer_;
-        EventManager    event_manager_;
+        SDL_Window* window_;
+        SDL_Renderer* renderer_;
+        EventManager event_manager_;
         GraphicsManager graphics_manager_;
-
         PersistentState persistent_state_;
 
         Uint32 last_time_;
